@@ -1,4 +1,4 @@
-defaultBranch: 'develop'
+defaultBranch: 'dev'
 branchName: '${issue.number}'
 branches:
   - label: 🚀 feature
