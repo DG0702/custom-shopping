@@ -1,11 +1,13 @@
-package com.example.shopping.domain.order;
+package com.example.shopping.domain.order.entity;
 
 import com.example.shopping.domain.common.entity.TimeStamped;
-import com.example.shopping.domain.product.entity.Product;
+import com.example.shopping.domain.order.enums.OrderStatus;
 import com.example.shopping.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @Entity
@@ -20,7 +22,11 @@ public class Order extends TimeStamped {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @JoinColumn(name = "product_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Product product;
+    @OneToMany
+    private List<OrderItem> orderItems;
+
+    private Long totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 }

@@ -1,5 +1,5 @@
 package com.example.shopping.domain.user.enums;
 
-public enum Role {
+public enum UserRole {
     USER, ADMIN
 }

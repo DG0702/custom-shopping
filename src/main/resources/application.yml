@@ -26,12 +26,12 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
 jwt:
   secret:
-    key: WvG406dyLBEesRAwcYAKSA4PicZkO/iBAFB93NLYF4k=
+    key: ${SECRET_KEY}
 
 
 

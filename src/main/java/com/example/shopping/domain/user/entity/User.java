@@ -1,7 +1,7 @@
 package com.example.shopping.domain.user.entity;
 
 import com.example.shopping.domain.common.entity.TimeStamped;
-import com.example.shopping.domain.user.enums.Role;
+import com.example.shopping.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,5 +19,5 @@ public class User extends TimeStamped {
     public String password;
     public String address;
     @Enumerated(EnumType.STRING)
-    public Role role;
+    public UserRole userRole;
 }
