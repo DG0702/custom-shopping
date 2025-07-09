@@ -1,9 +1,11 @@
 package com.example.shopping.domain.product.entity;
 
+import com.example.shopping.domain.order.entity.OrderItem;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @Entity
@@ -18,4 +20,7 @@ public class Product {
     private Integer price;
     private Integer stock;
     private Integer viewCount;
+
+    @OneToMany
+    private List<OrderItem> orderItems;
 }

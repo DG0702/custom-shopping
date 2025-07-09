@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -80,4 +81,16 @@ public class JwtUtil {
         Date expiration = extractClaims(token).getExpiration();
         return expiration.getTime() - System.currentTimeMillis();
     }
+
+    public String extractEmail(HttpServletRequest request) {
+        // 주문(결제) 저장
+        String authorizationHeader = request.getHeader("Authorization");
+
+        if(authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")){
+            return null;
+        }
+        String token = authorizationHeader.substring(7);
+        return extractClaims(token).get("email", String.class);
+    }
+
 }
