@@ -7,14 +7,13 @@ import com.example.shopping.domain.auth.dto.request.SignupRequestDto;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
 import com.example.shopping.domain.auth.dto.response.LoginResponseDto;
 import com.example.shopping.domain.auth.dto.response.SignupResponseDto;
-import com.example.shopping.domain.auth.dto.response.WithdrawResponseDto;
+import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
 import com.example.shopping.domain.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Date;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,10 +31,10 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
 
-    // 예외처리 수정
-
+    // 회원가입
     @Transactional
-    public SignupResponseDto signup(@Valid SignupRequestDto request) {
+    public SignupResponseDto signup(SignupRequestDto request) {
+
         if(userRepository.existsByEmail(request.getEmail())){
             throw new CustomException(ExceptionCode.ALREADY_EXISTS_EMAIL);
         }
@@ -56,26 +55,29 @@ public class AuthService {
         return new SignupResponseDto(savedUser);
     }
 
+    // 회원탈퇴
     @Transactional
-    public WithdrawResponseDto withdraw(@Valid WithdrawRequestDto request) {
-        User user = userRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public void withdraw(AuthUser authUser, WithdrawRequestDto request) {
+
+        User user = userRepository.findById(authUser.getId())
+                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            throw new RuntimeException("Wrong password");
+            throw new CustomException(ExceptionCode.WRONG_PASSWORD);
         }
 
         userRepository.delete(user);
-
-        return new WithdrawResponseDto("회원 탈퇴가 완료되었습니다");
     }
 
+    // 로그인
     @Transactional(readOnly = true)
-    public LoginResponseDto login(@Valid LoginRequestDto request) {
+    public LoginResponseDto login(LoginRequestDto request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-            throw new RuntimeException("Wrong password");
+            throw new CustomException(ExceptionCode.WRONG_PASSWORD);
         }
 
         // access token 생성
@@ -96,7 +98,7 @@ public class AuthService {
     }
 
 
-    // 리프레시 토큰 이용한 구현 예정
+    // 로그아웃
     public void logout(String bearerAccessToken, Long userId) {
 
         String accessToken = jwtUtil.substringToken(bearerAccessToken);
