@@ -6,6 +6,7 @@ import com.example.shopping.domain.common.dto.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,6 +16,7 @@ public class CartController {
 
     private final CartService cartService;
 
+    @PostMapping("/api/cart")
     public String create(
         @RequestBody @Validated CartCreateRequestDto request,
         @AuthenticationPrincipal AuthUser user
