@@ -8,6 +8,8 @@ import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
 import com.example.shopping.domain.auth.dto.response.LoginResponseDto;
 import com.example.shopping.domain.auth.dto.response.SignupResponseDto;
 import com.example.shopping.domain.auth.dto.response.WithdrawResponseDto;
+import com.example.shopping.domain.common.exception.CustomException;
+import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
 import com.example.shopping.domain.user.repository.UserRepository;
@@ -22,11 +24,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    // 예외처리 수정
+
     @Transactional
     public SignupResponseDto signup(@Valid SignupRequestDto request) {
         if(userRepository.existsByEmail(request.getEmail())){
-            throw new RuntimeException("Email already in use");
+            throw new CustomException(ExceptionCode.ALREADY_EXISTS_EMAIL);
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
