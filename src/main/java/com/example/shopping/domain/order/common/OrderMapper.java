@@ -14,16 +14,16 @@ public class OrderMapper {
     public static Order order(User user, OrderRequestDto dto){
         return Order.builder()
                 .user(user)
-                .totalPrice(dto.getTotalPrice())
                 .status(OrderStatus.ORDERED)
                 .build();
     }
 
     public static OrderItem orderItem(Order order, Product product, OrderRequestDto dto, OrderItemRequest itemDto){
+
         return OrderItem.builder()
                 .order(order)
                 .product(product)
-                .price(dto.getTotalPrice())
+                .price()
                 .quantity(itemDto.getQuantity())
                 .build();
     }

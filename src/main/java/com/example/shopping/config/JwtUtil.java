@@ -83,7 +83,7 @@ public class JwtUtil {
     }
 
     public String extractEmail(HttpServletRequest request) {
-        // 주문(결제) 저장
+
         String authorizationHeader = request.getHeader("Authorization");
 
         if(authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")){

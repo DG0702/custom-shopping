@@ -20,7 +20,4 @@ public class Product {
     private Integer price;
     private Integer stock;
     private Integer viewCount;
-
-    @OneToMany
-    private List<OrderItem> orderItems;
 }
