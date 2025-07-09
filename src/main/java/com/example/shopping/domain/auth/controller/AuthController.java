@@ -1,5 +1,6 @@
 package com.example.shopping.domain.auth.controller;
 
+import com.example.shopping.config.JwtUtil;
 import com.example.shopping.domain.auth.dto.request.LoginRequestDto;
 import com.example.shopping.domain.auth.dto.response.LoginResponseDto;
 import com.example.shopping.domain.auth.service.AuthService;
@@ -7,23 +8,24 @@ import com.example.shopping.domain.auth.dto.request.SignupRequestDto;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
 import com.example.shopping.domain.auth.dto.response.SignupResponseDto;
 import com.example.shopping.domain.auth.dto.response.WithdrawResponseDto;
+import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.dto.ResponseDto;
 import com.example.shopping.domain.user.entity.User;
+import com.example.shopping.domain.user.enums.UserRole;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<ResponseDto<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
@@ -43,8 +45,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
-        authService.logout(user);
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String bearerAccessToken,
+            @AuthenticationPrincipal AuthUser user) {
+        authService.logout(bearerAccessToken, user.getId());
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponseDto> refresh(@RequestHeader("Authorization") String bearerRefreshToken){
+        return ResponseEntity.ok(authService.refresh(bearerRefreshToken));
+    }
+
 }

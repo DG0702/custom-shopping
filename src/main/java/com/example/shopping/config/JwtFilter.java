@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.shopping.domain.user.enums.UserRole;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
+    private final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -33,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String url = httpRequest.getRequestURI();
 
-        if (url.startsWith("/auth/register") || url.startsWith("/auth/login")) {
+        if (url.startsWith("/auth/register") || url.startsWith("/auth/login") || url.startsWith("/auth/refresh")) {
             chain.doFilter(request, response);
             return;
         }
@@ -47,6 +49,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String jwt = jwtUtil.substringToken(bearerJwt);
+
+        //로그아웃 후 블랙리스트에 등록된 토큰인지 검사
+        String blackListToken = "blacklist : " + jwt;
+        if(redisTemplate.hasKey(blackListToken)){
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃한 유저입니다.");
+        }
 
         try {
             // JWT 유효성 검사와 claims 추출
