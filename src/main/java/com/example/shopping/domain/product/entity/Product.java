@@ -2,6 +2,7 @@ package com.example.shopping.domain.product.entity;
 
 import com.example.shopping.domain.common.entity.TimeStamped;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,10 +33,18 @@ public class Product extends TimeStamped {
 
     // product 수정
     public void updateProduct (String name, String description, Integer price, Long stock) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.stock = stock;
+        if (name != null) {
+            this.name = name;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (price != null) {
+            this.price = price;
+        }
+        if (stock != null) {
+            this.stock = stock;
+        }
     }
 
     public void increaseViewCount () {

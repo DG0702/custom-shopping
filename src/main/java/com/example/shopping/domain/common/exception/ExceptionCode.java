@@ -17,7 +17,17 @@ public enum ExceptionCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다"),
 
     // 409 CONFLICT
-    ALREADY_EXISTS_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다");
+    ALREADY_EXISTS_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
+
+    //400
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 상품 요청입니다."),
+
+    //404
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을수 없습니다."),
+
+    //409
+    PRODUCT_OUT_OF_STOCK(HttpStatus.CONFLICT, "상품 재고가 부족합니다");
+
 
     private final HttpStatus httpStatus;
     private final String message;
