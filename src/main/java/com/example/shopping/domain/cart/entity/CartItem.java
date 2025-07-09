@@ -5,11 +5,9 @@ import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@NoArgsConstructor
 @Table(name = "cart_items")
 public class CartItem extends TimeStamped {
     @Id
@@ -23,4 +21,14 @@ public class CartItem extends TimeStamped {
     private Product product;
 
     private Integer quantity;
+
+    protected CartItem() {}
+
+    public static CartItem createCartItem(User user, Product product, Integer quantity) {
+        CartItem cartItem = new CartItem();
+        cartItem.user = user;
+        cartItem.product = product;
+        cartItem.quantity = quantity;
+        return cartItem;
+    }
 }
