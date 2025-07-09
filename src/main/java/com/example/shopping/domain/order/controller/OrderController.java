@@ -3,10 +3,11 @@ package com.example.shopping.domain.order.controller;
 import com.example.shopping.domain.order.dto.CommonResponseDto;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.service.OrderService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.example.shopping.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,9 +21,9 @@ public class OrderController {
     @PostMapping("/cart")
     public ResponseEntity<CommonResponseDto> productOrder(
             @RequestBody OrderRequestDto dto,
-            HttpServletRequest request
+            @AuthenticationPrincipal User user
     ){
-        orderService.saveOrder(request, dto);
+        orderService.saveOrder(user, dto);
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
