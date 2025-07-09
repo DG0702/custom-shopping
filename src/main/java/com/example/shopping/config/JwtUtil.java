@@ -80,4 +80,5 @@ public class JwtUtil {
         Date expiration = extractClaims(token).getExpiration();
         return expiration.getTime() - System.currentTimeMillis();
     }
+
 }
