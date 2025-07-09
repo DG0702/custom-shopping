@@ -1,6 +1,6 @@
 package com.example.shopping.domain.order.service;
 
-import com.example.shopping.config.JwtUtil;
+
 import com.example.shopping.domain.cart.dto.OrderItemRequest;
 import com.example.shopping.domain.order.common.OrderMapper;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
@@ -11,8 +11,6 @@ import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
-import com.example.shopping.domain.user.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,33 +24,66 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
 
 
-    public void saveOrder(HttpServletRequest request, OrderRequestDto dto){
-        String userEmail = jwtUtil.extractEmail(request);
+    public void saveOrder(User user , OrderRequestDto dto){
+        // 주문한 상품 총 가격
+        long totalPrice = calculateTotalPrice(dto);
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new RuntimeException("유저가 존재하지 않습니다.")
-        );
+        // 상품 주문(결제) 내용
+        Order order = OrderMapper.order(user, totalPrice);
 
-        Order order = OrderMapper.order(user,dto);
-
+        // Order 테이블 저장
         orderRepository.save(order);
 
+        // 주문한 상품들
+        List<OrderItem> orderItems = getPurchasedItems(order,dto);
+        
+        // Order_Item 테이블 저장
+        orderItemRepository.saveAll(orderItems);
+    }
+
+
+    /**
+     *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
+     */
+    // 주문 상품 총 가격
+    private Long calculateTotalPrice(OrderRequestDto dto){
+        long totalPrice = 0L;
+
+        for(OrderItemRequest itemDto : dto.getItems()){
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다"));
+
+            Long price = product.getPrice();
+            Long quantity = itemDto.getQuantity();
+
+            if(price == null || quantity == null){
+                throw new IllegalArgumentException("가격 또는 수량이 잘못되었습니다.");
+            }
+
+            totalPrice += (product.getPrice() * itemDto.getQuantity());
+        }
+        return  totalPrice;
+    }
+
+    /**
+     *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
+     */
+    // 주문한 상품들
+    private List<OrderItem> getPurchasedItems(Order order, OrderRequestDto dto){
         List<OrderItem> orderItems = new ArrayList<>();
 
         // 주문 항목 저장
         for(OrderItemRequest itemDto : dto.getItems()){
             Product product  = productRepository.findById(itemDto.getProductId()).
-                    orElseThrow(RuntimeException::new);
+                    orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
 
-            OrderItem orderItem = OrderMapper.orderItem(order, product, dto, itemDto);
+            OrderItem orderItem = OrderMapper.orderItem(order, product, itemDto);
 
             orderItems.add(orderItem);
         }
-        orderItemRepository.saveAll(orderItems);
+        return orderItems;
     }
 
 
