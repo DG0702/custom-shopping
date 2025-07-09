@@ -33,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String url = httpRequest.getRequestURI();
 
-        if (url.startsWith("/auth/register") || url.startsWith("/auth/login")) {
+        if (url.startsWith("/auth/register") || url.startsWith("/auth/login") || url.startsWith("/auth/refresh")) {
             chain.doFilter(request, response);
             return;
         }

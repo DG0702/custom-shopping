@@ -13,10 +13,14 @@ import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
 import com.example.shopping.domain.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    // 예외처리 수정
 
     @Transactional
     public SignupResponseDto signup(@Valid SignupRequestDto request) {
@@ -68,13 +75,53 @@ public class AuthService {
             throw new RuntimeException("Wrong password");
         }
 
+        // access token 생성
         String token = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole());
 
-        return new LoginResponseDto(user.getId(), user.getEmail(), token);
+        // refresh token 생성
+        String refreshToken = jwtUtil.createRefreshToken(user.getId(), user.getEmail(), user.getUserRole());
+
+        // refresh token Redis에 저장
+        // 저장 형태
+        // Key: "refreshToken : 1"
+        // Value: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        // TTL: 7일
+        String redisKey = "refreshToken : " + user.getId();
+        redisTemplate.opsForValue().set(redisKey, refreshToken, Duration.ofDays(7));
+
+        return new LoginResponseDto(user.getId(), user.getEmail(), token, refreshToken);
     }
 
 
     // 리프레시 토큰 이용한 구현 예정
     public void logout(User user) {
+
     }
+
+    // access token 만료 시 refresh
+    public LoginResponseDto refresh(String refreshToken){
+        refreshToken = jwtUtil.substringToken(refreshToken);
+        Claims claims = jwtUtil.extractClaims(refreshToken);
+
+        Long userId = Long.parseLong(claims.getSubject());
+        String email = claims.get("email", String.class);
+        UserRole userRole = UserRole.valueOf(claims.get("userRole", String.class));
+
+        // refreshToken 검증
+        String redisKey = "refreshToken : " + userId;
+        String storedRefreshToken = redisTemplate.opsForValue().get(redisKey);
+
+        if(storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)){
+            throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        // 새 토큰 발급, 기존 refresh token 덮어쓰기
+        String newAccessToken = jwtUtil.createToken(userId, email, userRole);
+        String newRefreshToken = jwtUtil.createRefreshToken(userId, email, userRole);
+
+        redisTemplate.opsForValue().set(redisKey, newRefreshToken, Duration.ofDays(7));
+
+        return new LoginResponseDto(userId, email, newAccessToken, newRefreshToken);
+    }
+
 }
