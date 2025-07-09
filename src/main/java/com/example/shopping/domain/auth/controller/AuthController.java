@@ -8,6 +8,7 @@ import com.example.shopping.domain.auth.dto.request.SignupRequestDto;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
 import com.example.shopping.domain.auth.dto.response.SignupResponseDto;
 import com.example.shopping.domain.auth.dto.response.WithdrawResponseDto;
+import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.dto.ResponseDto;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
@@ -44,14 +45,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
-        authService.logout(user);
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String bearerAccessToken,
+            @AuthenticationPrincipal AuthUser user) {
+        authService.logout(bearerAccessToken, user.getId());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> refresh(@RequestHeader("Authorization") String refreshToken){
-        return ResponseEntity.ok(authService.refresh(refreshToken));
+    public ResponseEntity<LoginResponseDto> refresh(@RequestHeader("Authorization") String bearerRefreshToken){
+        return ResponseEntity.ok(authService.refresh(bearerRefreshToken));
     }
 
 }

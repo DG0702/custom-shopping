@@ -16,12 +16,14 @@ import com.example.shopping.domain.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-
+import java.util.Date;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -69,6 +71,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponseDto login(@Valid LoginRequestDto request) {
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
@@ -94,13 +97,28 @@ public class AuthService {
 
 
     // 리프레시 토큰 이용한 구현 예정
-    public void logout(User user) {
+    public void logout(String bearerAccessToken, Long userId) {
 
+        String accessToken = jwtUtil.substringToken(bearerAccessToken);
+        Long remainingTokenTime = jwtUtil.getExpiration(accessToken);
+
+        // blacklist token Redis에 저장
+        // 저장 형태
+        // Key : "blacklist : eyJhbGci..."
+        // Value : "logout"
+        // TTL : 남은 시간
+        String blackListTokenKey = "blacklist : " + accessToken;
+        redisTemplate.opsForValue().set(blackListTokenKey, "logout", Duration.ofMillis(remainingTokenTime));
+
+        // 저장된 refresh token 삭제
+        String refreshTokenKey = "refreshToken : " + userId;
+        redisTemplate.delete(refreshTokenKey);
     }
 
     // access token 만료 시 refresh
-    public LoginResponseDto refresh(String refreshToken){
-        refreshToken = jwtUtil.substringToken(refreshToken);
+    public LoginResponseDto refresh(String bearerRefreshToken){
+
+        String refreshToken = jwtUtil.substringToken(bearerRefreshToken);
         Claims claims = jwtUtil.extractClaims(refreshToken);
 
         Long userId = Long.parseLong(claims.getSubject());
@@ -109,7 +127,8 @@ public class AuthService {
 
         // refreshToken 검증
         String redisKey = "refreshToken : " + userId;
-        String storedRefreshToken = redisTemplate.opsForValue().get(redisKey);
+        String storedBearerRefreshToken = redisTemplate.opsForValue().get(redisKey);
+        String storedRefreshToken = jwtUtil.substringToken(storedBearerRefreshToken);
 
         if(storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)){
             throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
