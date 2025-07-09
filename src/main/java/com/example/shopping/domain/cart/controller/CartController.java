@@ -8,6 +8,7 @@ import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -29,8 +30,7 @@ public class CartController {
     ){
         cartService.create(request, user.getId());
         ResponseDto<Void> responseDto = new ResponseDto<>("장바구니에 상품이 추가되었습니다.", null);
-        //TODO created 로 변경하기
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     @GetMapping("/api/cart")
