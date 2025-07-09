@@ -12,10 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,5 +38,15 @@ public class CartController {
         PageResponseDto<CartResponseDto> page = cartService.getPage(user.getId(), pageable);
         ResponseDto<PageResponseDto<CartResponseDto>> response = new ResponseDto<>("장바구니 목록을 조회하였습니다.", page);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/api/cart/{cartId}")
+    public ResponseEntity<ResponseDto<Void>> delete(
+            @PathVariable Long cartId,
+            @AuthenticationPrincipal AuthUser user
+    ){
+        cartService.delete(user.getId(), cartId);
+        ResponseDto<Void> responseDto = new ResponseDto<>("장바구니 항목이 삭제되었습니다.", null);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }

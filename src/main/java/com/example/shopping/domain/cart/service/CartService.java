@@ -5,6 +5,8 @@ import com.example.shopping.domain.cart.dto.CartResponseDto;
 import com.example.shopping.domain.cart.entity.CartItem;
 import com.example.shopping.domain.cart.repository.CartRepository;
 import com.example.shopping.domain.common.dto.PageResponseDto;
+import com.example.shopping.domain.common.exception.CustomException;
+import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.service.ProductService;
 import com.example.shopping.domain.user.entity.User;
@@ -37,5 +39,15 @@ public class CartService {
         userQueryService.findByIdOrElseThrow(userId);
         Page<CartResponseDto> paged = cartRepository.getCartPage(userId, pageable);
         return new PageResponseDto<>(paged);
+    }
+
+    @Transactional
+    public void delete(Long userId, Long cartId) {
+        CartItem cartItem = cartRepository.findById(cartId)
+                .orElseThrow(()-> new CustomException(ExceptionCode.CART_NOT_FOUND));
+        if(!cartItem.getUser().getId().equals(userId)) {
+            throw new CustomException(ExceptionCode.INVALID_USER_ROLE);
+        }
+        cartRepository.delete(cartItem);
     }
 }
