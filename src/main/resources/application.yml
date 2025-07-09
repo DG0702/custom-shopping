@@ -24,16 +24,18 @@ spring:
   profiles:
     active: local
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+#  data:
+#    redis:
+#      host: ${REDIS_HOST}
+#      port: ${REDIS_PORT}
 
 jwt:
   secret:
     key: ${SECRET_KEY}
 
-
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
 
 #management:
 #  endpoints:
