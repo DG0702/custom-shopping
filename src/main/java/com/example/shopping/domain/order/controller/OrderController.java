@@ -1,9 +1,10 @@
 package com.example.shopping.domain.order.controller;
 
-import com.example.shopping.domain.order.dto.CommonResponseDto;
+import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.dto.ResponseDto;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
+import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.service.OrderService;
-import com.example.shopping.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +20,17 @@ public class OrderController {
 
 
     @PostMapping("/cart")
-    public ResponseEntity<CommonResponseDto> productOrder(
+    public ResponseEntity<ResponseDto<OrderResponseDto>> productOrder(
             @RequestBody OrderRequestDto dto,
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal AuthUser user
     ){
-        orderService.saveOrder(user, dto);
 
-        return ResponseEntity.status(HttpStatus.OK).build();
+        OrderResponseDto orderResponseDto = orderService.saveOrder(user, dto);
+
+        ResponseDto<OrderResponseDto> success = new ResponseDto<>("주문이 완료되었습니다.", orderResponseDto);
+
+
+        return ResponseEntity.status(HttpStatus.OK).body(success);
     }
 
 

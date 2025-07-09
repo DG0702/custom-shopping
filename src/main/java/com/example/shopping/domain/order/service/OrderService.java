@@ -2,8 +2,12 @@ package com.example.shopping.domain.order.service;
 
 
 import com.example.shopping.domain.cart.dto.OrderItemRequest;
+import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.exception.CustomException;
+import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.order.common.OrderMapper;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
+import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
 import com.example.shopping.domain.order.entity.OrderItem;
 import com.example.shopping.domain.order.repository.OrderItemRepository;
@@ -11,6 +15,7 @@ import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
+import com.example.shopping.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,23 +29,31 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final UserRepository userRepository;
 
 
-    public void saveOrder(User user , OrderRequestDto dto){
+    public OrderResponseDto saveOrder(AuthUser user , OrderRequestDto dto){
+        Long id = user.getId();
+
+        User payer = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+
         // 주문한 상품 총 가격
         long totalPrice = calculateTotalPrice(dto);
 
         // 상품 주문(결제) 내용
-        Order order = OrderMapper.order(user, totalPrice);
+        Order order = OrderMapper.order(payer, totalPrice);
 
         // Order 테이블 저장
-        orderRepository.save(order);
+        Order save = orderRepository.save(order);
 
         // 주문한 상품들
         List<OrderItem> orderItems = getPurchasedItems(order,dto);
         
         // Order_Item 테이블 저장
         orderItemRepository.saveAll(orderItems);
+
+        return OrderMapper.payment(save);
     }
 
 

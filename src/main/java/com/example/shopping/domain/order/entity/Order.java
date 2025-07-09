@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 
 
 @Getter
@@ -26,9 +25,6 @@ public class Order extends TimeStamped {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @OneToMany
-    private List<OrderItem> orderItems;
 
     private Long totalPrice;
 

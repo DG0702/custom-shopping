@@ -1,6 +1,7 @@
 package com.example.shopping.domain.order.common;
 
 import com.example.shopping.domain.cart.dto.OrderItemRequest;
+import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
 import com.example.shopping.domain.order.entity.OrderItem;
 import com.example.shopping.domain.order.enums.OrderStatus;
@@ -27,5 +28,13 @@ public class OrderMapper {
                 .price(product.getPrice())
                 .quantity(itemDto.getQuantity())
                 .build();
+    }
+
+    public static OrderResponseDto payment(Order save){
+            return OrderResponseDto.builder()
+                    .orderId(save.getId())
+                    .status(save.getStatus())
+                    .totalPrice(save.getTotalPrice())
+                    .build();
     }
 }
