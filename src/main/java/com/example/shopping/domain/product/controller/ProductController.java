@@ -1,5 +1,6 @@
 package com.example.shopping.domain.product.controller;
 
+import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
 import com.example.shopping.domain.product.dto.response.ReadProductDto;
 import com.example.shopping.domain.product.dto.response.ProductResponseDto;
@@ -28,11 +29,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.readProductById(productId));
     }
 
-    @PutMapping("/{productId}")
-    public ResponseEntity<ProductResponseDto> updateProduct(
+    @PatchMapping("/{productId}")
+    public ResponseEntity<ProductResponseDto> patchProduct (
             @PathVariable Long productId,
-            @Valid@RequestBody ProductRequestDto request
-    ) {
+            @Valid @RequestBody ProductPatchRequestDto request
+            ) {
         return ResponseEntity.ok(productService.updateProduct(productId, request));
     }
 

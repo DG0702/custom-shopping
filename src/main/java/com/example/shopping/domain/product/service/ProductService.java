@@ -1,5 +1,6 @@
 package com.example.shopping.domain.product.service;
 
+import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
 import com.example.shopping.domain.product.dto.response.ReadProductDto;
 import com.example.shopping.domain.product.dto.response.ProductResponseDto;
@@ -46,12 +47,11 @@ public class ProductService {
 
     //상품Update
     @Transactional
-    public ProductResponseDto updateProduct (Long productId, ProductRequestDto request) {
-
+    public ProductResponseDto updateProduct (Long productId, ProductPatchRequestDto request) {
         Product product = findByIdOrElseThrow(productId);
-        product.updateProduct(request.getName(),request.getDescription(), request.getPrice(), request.getStock());
+        product.updateProduct(request.getName(), request.getDescription(), request.getPrice(), request.getStock());
 
-        return new ProductResponseDto(true,"상품의 정보가 변경되었습니다.");
+        return new ProductResponseDto(true, "상품의 정보가 변경되었습니다");
     }
 
     //상품Delete
