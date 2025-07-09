@@ -19,10 +19,10 @@ public class Product extends TimeStamped {
     private String name;
     private String description;
     private Integer price;
-    private Long stock;
+    private Integer stock;
     private Long viewCount;
 
-    public Product(String name, String description, Integer price, Long stock) {
+    public Product(String name, String description, Integer price, Integer stock) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -31,7 +31,7 @@ public class Product extends TimeStamped {
     }
 
     // product 수정
-    public void updateProduct (String name, String description, Integer price, Long stock) {
+    public void updateProduct (String name, String description, Integer price, Integer stock) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -40,6 +40,10 @@ public class Product extends TimeStamped {
 
     public void increaseViewCount () {
         this.viewCount++;
+    }
+
+    public void updateStock(Integer stock) {
+        this.stock = stock;
     }
 
 }
