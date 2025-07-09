@@ -30,7 +30,7 @@ public class Order extends TimeStamped {
     @OneToMany
     private List<OrderItem> orderItems;
 
-    private Integer totalPrice;
+    private Long totalPrice;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
