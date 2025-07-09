@@ -1,7 +1,7 @@
 package com.example.shopping.domain.product.service;
 
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
-import com.example.shopping.domain.product.dto.response.ProductReadByIdDto;
+import com.example.shopping.domain.product.dto.response.ReadProductDto;
 import com.example.shopping.domain.product.dto.response.ProductResponseDto;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
@@ -29,12 +29,12 @@ public class ProductService {
 
     //상품단건Read
     @Transactional
-    public ProductReadByIdDto readProductById(Long productId) {
+    public ReadProductDto readProductById(Long productId) {
 
-        Product product = findProductSafety(productId);
+        Product product = findByIdOrElseThrow(productId);
         product.increaseViewCount();
 
-        return new ProductReadByIdDto(
+        return new ReadProductDto(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
@@ -47,7 +47,8 @@ public class ProductService {
     //상품Update
     @Transactional
     public ProductResponseDto updateProduct (Long productId, ProductRequestDto request) {
-        Product product = findProductSafety(productId);
+
+        Product product = findByIdOrElseThrow(productId);
         product.updateProduct(request.getName(),request.getDescription(), request.getPrice(), request.getStock());
 
         return new ProductResponseDto(true,"상품의 정보가 변경되었습니다.");
@@ -56,13 +57,13 @@ public class ProductService {
     //상품Delete
     @Transactional
     public ProductResponseDto deleteProduct(Long productId) {
-        Product product = findProductSafety(productId);
+        Product product = findByIdOrElseThrow(productId);
         productRepository.delete(product);
         return new ProductResponseDto(true, "상품이 삭제되었습니다.");
     }
 
     //상품 예외처리 분리
-    public Product findProductSafety (Long productId) {
+    public Product findByIdOrElseThrow(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("대상이 존재하지 않습니다"));
     }

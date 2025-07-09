@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class ProductReadByIdDto {
+public class ReadProductDto {
     private Long id;
     private String name;
     private String description;
