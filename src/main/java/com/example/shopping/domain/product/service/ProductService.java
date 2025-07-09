@@ -2,6 +2,7 @@ package com.example.shopping.domain.product.service;
 
 import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
+import com.example.shopping.domain.product.dto.response.ProductRankingDto;
 import com.example.shopping.domain.product.dto.response.ReadProductDto;
 import com.example.shopping.domain.product.dto.response.ProductResponseDto;
 import com.example.shopping.domain.product.entity.Product;
@@ -9,6 +10,8 @@ import com.example.shopping.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 
 @Service
@@ -60,6 +63,17 @@ public class ProductService {
         Product product = findByIdOrElseThrow(productId);
         productRepository.delete(product);
         return new ProductResponseDto(true, "상품이 삭제되었습니다.");
+    }
+    //상품 랭킹 조회
+    public List<ProductRankingDto> getProductRanking (Long size) {
+        List<Product> products = productRepository.findProductRanking(size);
+        return products.stream()
+                .map(product -> new ProductRankingDto(
+                        product.getId(),
+                        product.getName(),
+                        product.getViewCount()
+                ))
+                .toList();
     }
 
     //상품 예외처리 분리
