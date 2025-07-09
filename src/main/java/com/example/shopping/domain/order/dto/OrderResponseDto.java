@@ -9,5 +9,5 @@ import lombok.Getter;
 public class OrderResponseDto {
     private Long orderId;
     private OrderStatus status;
-    private Long totalPrice;
+    private Integer totalPrice;
 }

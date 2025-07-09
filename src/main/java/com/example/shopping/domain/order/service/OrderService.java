@@ -1,7 +1,7 @@
 package com.example.shopping.domain.order.service;
 
 
-import com.example.shopping.domain.cart.dto.OrderItemRequest;
+import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
 import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
@@ -39,7 +39,7 @@ public class OrderService {
                 .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
 
         // 주문한 상품 총 가격
-        long totalPrice = calculateTotalPrice(dto);
+        Integer totalPrice = calculateTotalPrice(dto);
 
         // 상품 주문(결제) 내용
         Order order = OrderMapper.order(payer, totalPrice);
@@ -61,15 +61,15 @@ public class OrderService {
      *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
      */
     // 주문 상품 총 가격
-    private Long calculateTotalPrice(OrderRequestDto dto){
-        long totalPrice = 0L;
+    private Integer calculateTotalPrice(OrderRequestDto dto){
+        int totalPrice = 0;
 
-        for(OrderItemRequest itemDto : dto.getItems()){
+        for(CartCreateRequestDto itemDto : dto.getItems()){
             Product product = productRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다"));
 
-            Long price = product.getPrice();
-            Long quantity = itemDto.getQuantity();
+            Integer price = product.getPrice();
+            Integer quantity = itemDto.getQuantity();
 
             if(price == null || quantity == null){
                 throw new IllegalArgumentException("가격 또는 수량이 잘못되었습니다.");
@@ -88,7 +88,7 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
 
         // 주문 항목 저장
-        for(OrderItemRequest itemDto : dto.getItems()){
+        for(CartCreateRequestDto itemDto : dto.getItems()){
             Product product  = productRepository.findById(itemDto.getProductId()).
                     orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
 

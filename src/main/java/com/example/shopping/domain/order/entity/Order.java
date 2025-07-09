@@ -26,7 +26,7 @@ public class Order extends TimeStamped {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private Long totalPrice;
+    private Integer totalPrice;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
