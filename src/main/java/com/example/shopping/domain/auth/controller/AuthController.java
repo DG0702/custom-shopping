@@ -7,6 +7,7 @@ import com.example.shopping.domain.auth.dto.request.SignupRequestDto;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
 import com.example.shopping.domain.auth.dto.response.SignupResponseDto;
 import com.example.shopping.domain.auth.dto.response.WithdrawResponseDto;
+import com.example.shopping.domain.common.dto.ResponseDto;
 import com.example.shopping.domain.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto request) {
-        return ResponseEntity.ok(authService.signup(request));
+    public ResponseEntity<ResponseDto<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {
+        SignupResponseDto responseData = authService.signup(request);
+        ResponseDto<SignupResponseDto> response = new ResponseDto<>("회원가입이 완료되었습니다", responseData);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/withdraw")
