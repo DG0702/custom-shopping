@@ -17,7 +17,5 @@ public interface OrderRepository {
 
     Order save(Order order);
 
-    void delete(Order order);
-
     Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable);
 }

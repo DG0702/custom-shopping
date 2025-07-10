@@ -33,11 +33,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public void delete(Order order) {
-        orderjpaRepository.delete(order);
-    }
-
-    @Override
     public Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable) {
         return queryDslRepository.getOrders(authUser, pageable);
     }

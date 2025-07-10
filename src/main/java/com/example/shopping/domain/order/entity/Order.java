@@ -38,10 +38,14 @@ public class Order extends TimeStamped {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    // Order 저장 시 OrderItem 저장하기 위한 메서드 
+    // Order 저장 시 OrderItem 저장하기 위한 메서드
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
+    }
+
+    public void updateOrderStatus(OrderStatus status) {
+        this.status = status;
     }
 
 

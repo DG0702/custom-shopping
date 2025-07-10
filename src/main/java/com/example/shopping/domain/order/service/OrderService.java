@@ -11,6 +11,7 @@ import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
 import com.example.shopping.domain.order.entity.OrderItem;
+import com.example.shopping.domain.order.enums.OrderStatus;
 import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
@@ -66,7 +67,7 @@ public class OrderService {
     
     // 주문 취소
     @Transactional
-    public void deleteOrder(AuthUser user, Long orderId){
+    public void cancelOrder(AuthUser user, Long orderId){
 
         Order order = orderRepository.findById(orderId);
 
@@ -75,7 +76,7 @@ public class OrderService {
             throw new CustomException(ExceptionCode.FORBIDDEN);
         }
 
-        orderRepository.delete(order);
+        order.updateOrderStatus(OrderStatus.CANCELED);
     }
 
 

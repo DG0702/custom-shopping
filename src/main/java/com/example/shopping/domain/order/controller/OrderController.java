@@ -55,11 +55,11 @@ public class OrderController {
     }
 
     // 주문 취소
-    @DeleteMapping("/{orderId}")
+    @PostMapping("/{orderId}")
     public ResponseEntity<ResponseDto<Void>> deleteOrder(
             @PathVariable Long orderId,
             @AuthenticationPrincipal AuthUser user){
-        orderService.deleteOrder(user,orderId);
+        orderService.cancelOrder(user,orderId);
 
         ResponseDto<Void> success = new ResponseDto<>("주문이 취소 되었습니다.", null);
 
