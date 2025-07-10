@@ -20,6 +20,7 @@ public class OrderMapper {
                 .build();
     }
 
+    // OrderItem Entity
     public static OrderItem orderItem(Order order, Product product, CartCreateRequestDto itemDto){
 
         return OrderItem.builder()
@@ -30,6 +31,7 @@ public class OrderMapper {
                 .build();
     }
 
+    // Entity -> Dto
     public static OrderResponseDto payment(Order save){
             return OrderResponseDto.builder()
                     .orderId(save.getId())

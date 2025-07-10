@@ -1,5 +1,7 @@
 package com.example.shopping.domain.user.service;
 
+import com.example.shopping.domain.common.exception.CustomException;
+import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,19 +22,17 @@ public class UserQueryService {
         return userRepository.findByEmail(email);
     }
 
-    // Todo 공통 예외 적용
     public User findByEmailOrElseThrow(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email"));
+                .orElseThrow(() -> new CustomException(ExceptionCode.EMAIL_NOT_FOUND));
     }
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
 
-    // Todo 공통 예외 적용
     public User findByIdOrElseThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id"));
+                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
     }
 }

@@ -20,5 +20,5 @@ public class ProductRequestDto {
     private Integer price;
     @NotNull(message = "재고는 필수 입력값 입니다.")
     @Min(value = 0, message = "재고는 0개 이상이어야 합니다.")
-    private Long stock;
+    private Integer stock;
 }
