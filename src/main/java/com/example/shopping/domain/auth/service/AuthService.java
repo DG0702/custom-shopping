@@ -2,6 +2,7 @@ package com.example.shopping.domain.auth.service;
 
 import com.example.shopping.config.JwtUtil;
 import com.example.shopping.config.PasswordEncoder;
+import com.example.shopping.domain.auth.dto.request.ChangeUserRoleRequestDto;
 import com.example.shopping.domain.auth.dto.request.LoginRequestDto;
 import com.example.shopping.domain.auth.dto.request.SignupRequestDto;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequestDto;
@@ -102,15 +103,17 @@ public class AuthService {
     public void logout(String bearerAccessToken, Long userId) {
 
         String accessToken = jwtUtil.substringToken(bearerAccessToken);
-        Long remainingTokenTime = jwtUtil.getExpiration(accessToken);
+        addToBlacklist(accessToken);
 
-        // blacklist token Redis에 저장
-        // 저장 형태
-        // Key : "blacklist : eyJhbGci..."
-        // Value : "logout"
-        // TTL : 남은 시간
-        String blackListTokenKey = "blacklist : " + accessToken;
-        redisTemplate.opsForValue().set(blackListTokenKey, "logout", Duration.ofMillis(remainingTokenTime));
+//        Long remainingTokenTime = jwtUtil.getExpiration(accessToken);
+//
+//        // blacklist token Redis에 저장
+//        // 저장 형태
+//        // Key : "blacklist : eyJhbGci..."
+//        // Value : "logout"
+//        // TTL : 남은 시간
+//        String blackListTokenKey = "blacklist : " + accessToken;
+//        redisTemplate.opsForValue().set(blackListTokenKey, "logout", Duration.ofMillis(remainingTokenTime));
 
         // 저장된 refresh token 삭제
         String refreshTokenKey = "refreshToken : " + userId;
@@ -145,4 +148,42 @@ public class AuthService {
         return new LoginResponseDto(userId, email, newAccessToken, newRefreshToken);
     }
 
+    public LoginResponseDto changeRole(String bearerAccessToken, ChangeUserRoleRequestDto request){
+
+        UserRole newUserRole = UserRole.of(request.getUserRole());
+
+        String accessToken = jwtUtil.substringToken(bearerAccessToken);
+
+        Claims claims = jwtUtil.extractClaims(accessToken);
+        Long userId = Long.parseLong(claims.getSubject());
+        String email = claims.get("email", String.class);
+        UserRole userRole = UserRole.valueOf(claims.get("userRole", String.class));
+
+        if(userRole.equals(newUserRole)){
+            throw new CustomException(ExceptionCode.INVALID_USER_ROLE, "요청한 사용자 권한이 현재 권한과 동일합니다.");
+        }
+
+        addToBlacklist(accessToken);
+
+        String newAccessToken = jwtUtil.createToken(userId, email, newUserRole);
+        String newRefreshToken = jwtUtil.createRefreshToken(userId, email, newUserRole);
+
+        String redisKey = "refreshToken : " + userId;
+        redisTemplate.opsForValue().set(redisKey, newRefreshToken, Duration.ofDays(7));
+
+        return new LoginResponseDto(userId, email, newAccessToken, newRefreshToken);
+    }
+
+    public void addToBlacklist(String accessToken){
+
+        Long remainingTokenTime = jwtUtil.getExpiration(accessToken);
+
+        // blacklist token Redis에 저장
+        // 저장 형태
+        // Key : "blacklist : eyJhbGci..."
+        // Value : "logout"
+        // TTL : 남은 시간
+        String blackListTokenKey = "blacklist : " + accessToken;
+        redisTemplate.opsForValue().set(blackListTokenKey, "logout", Duration.ofMillis(remainingTokenTime));
+    }
 }
