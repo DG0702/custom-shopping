@@ -54,6 +54,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String blackListToken = "blacklist : " + jwt;
         if(redisTemplate.hasKey(blackListToken)){
             httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃한 유저입니다.");
+            return;
         }
 
         try {
