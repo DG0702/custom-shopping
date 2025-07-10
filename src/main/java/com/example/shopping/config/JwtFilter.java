@@ -81,13 +81,13 @@ public class JwtFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
         }
         catch (SecurityException | MalformedJwtException e) {
-            logAndSend(request, "Invalid JWT token", "유효하지 않는 JWT 서명입니다.", e);
+            jwtLogAndSend(request, "Invalid JWT token", "유효하지 않는 JWT 서명입니다.", e);
         }
         catch (ExpiredJwtException e) {
-            logAndSend(request, "Expired JWT token", "만료된 JWT 토큰입니다.", e);
+            jwtLogAndSend(request, "Expired JWT token", "만료된 JWT 토큰입니다.", e);
         }
         catch (UnsupportedJwtException e) {
-            logAndSend(request, "Unsupported JWT token" , "지원되지 않는 JWT 토큰입니다.", e);
+            jwtLogAndSend(request, "Unsupported JWT token" , "지원되지 않는 JWT 토큰입니다.", e);
         }
         catch (Exception e) {
             log.error("Internal server error", e);
@@ -95,7 +95,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
     }
 
-    private void logAndSend(HttpServletRequest request, String logMessage, String message, Exception e){
+    private void jwtLogAndSend(HttpServletRequest request, String logMessage, String message, Exception e){
         log.error("{} : {}", logMessage, e.getMessage());
         request.setAttribute("exceptionMessage", message);
         throw new BadCredentialsException(message);
