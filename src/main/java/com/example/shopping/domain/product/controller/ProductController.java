@@ -22,6 +22,7 @@ public class ProductController {
 
     private final ProductService productService;
 
+    //상품생성
     @PostMapping
     public ResponseEntity<ResponseDto<Void>> creatProduct(@Valid@RequestBody ProductRequestDto request) {
         productService.createProduct(request);

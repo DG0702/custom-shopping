@@ -24,7 +24,6 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-
     //상품Create
     @Transactional
     public void createProduct(ProductRequestDto request) {
@@ -63,6 +62,7 @@ public class ProductService {
         Product product = findByIdOrElseThrow(productId);
         productRepository.delete(product);
     }
+
     //상품 랭킹 조회
     @Transactional(readOnly = true)
     public List<ProductRankingDto> getProductRanking (Long size) {
@@ -75,6 +75,7 @@ public class ProductService {
                 ))
                 .toList();
     }
+
     //상품목록 페이징 해서 조회
     @Transactional(readOnly = true)
     public ProductListResponseDto getAllProductsPaged (int page, int size) {
