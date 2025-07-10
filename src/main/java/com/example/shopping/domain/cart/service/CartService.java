@@ -46,7 +46,7 @@ public class CartService {
         CartItem cartItem = cartRepository.findById(cartId)
                 .orElseThrow(()-> new CustomException(ExceptionCode.CART_NOT_FOUND));
         if(!cartItem.getUser().getId().equals(userId)) {
-            throw new CustomException(ExceptionCode.INVALID_USER_ROLE);
+            throw new CustomException(ExceptionCode.FORBIDDEN);
         }
         cartRepository.delete(cartItem);
     }

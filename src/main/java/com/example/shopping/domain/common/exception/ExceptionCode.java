@@ -12,6 +12,7 @@ public enum ExceptionCode {
     WRONG_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다"),
 
     // 403 FORBIDDEN
+    FORBIDDEN(HttpStatus.FORBIDDEN, "해당 작업에 대한 권한이 없습니다."),
 
     // 404 NOT_FOUND
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다"),
