@@ -6,7 +6,6 @@ import com.example.shopping.domain.product.dto.request.ProductRequestDto;
 import com.example.shopping.domain.product.dto.response.ProductListResponseDto;
 import com.example.shopping.domain.product.dto.response.ProductRankingDto;
 import com.example.shopping.domain.product.dto.response.ReadProductDto;
-import com.example.shopping.domain.product.dto.response.ProductResponseDto;
 import com.example.shopping.domain.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,11 +44,12 @@ public class ProductController {
     }
     //상품 수정
     @PatchMapping("/{productId}")
-    public ResponseEntity<ProductResponseDto> patchProduct (
+    public ResponseEntity<ResponseDto<Void>> patchProduct (
             @PathVariable Long productId,
             @Valid @RequestBody ProductPatchRequestDto request
             ) {
-        return ResponseEntity.ok(productService.updateProduct(productId, request));
+        productService.updateProduct(productId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품이 수정되었습니다", null));
     }
     //상품삭제
     @DeleteMapping("/{productId}")
