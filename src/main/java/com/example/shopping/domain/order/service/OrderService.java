@@ -7,6 +7,8 @@ import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.order.common.OrderMapper;
+import com.example.shopping.domain.order.dto.OrderItemListDto;
+import com.example.shopping.domain.order.dto.OrderItemResponseDto;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
@@ -68,15 +70,25 @@ public class OrderService {
     // 주문 취소
     @Transactional
     public void cancelOrder(AuthUser user, Long orderId){
-
         Order order = orderRepository.findById(orderId);
 
-        // 구매자가 주문을 취소하는 것이 맞는지 확인
-        if(!order.getUser().getId().equals(user.getId())){
-            throw new CustomException(ExceptionCode.FORBIDDEN);
-        }
+        // 로그인한 사용자와 주문 소유자 일치 여부 확인
+        validateOrderOwner(order,user);
 
         order.updateOrderStatus(OrderStatus.CANCELED);
+    }
+
+    // 주문 상품들 조회
+    @Transactional
+    public OrderItemResponseDto getOrder(AuthUser user, Long orderId, Pageable pageable){
+        Order order = orderRepository.findById(orderId);
+
+        // 로그인한 사용자와 주문 소유자 일치 여부 확인
+        validateOrderOwner(order,user);
+
+        Page<OrderItemListDto> orderItems = orderRepository.getOrderItems(order,pageable);
+
+        return OrderMapper.orderItemResponseDto(order,orderId, orderItems);
     }
 
 
@@ -139,6 +151,12 @@ public class OrderService {
         }
     }
 
+    // 로그인한 사용자와 주문 소유자 일치 여부 확인
+    private void validateOrderOwner(Order order, AuthUser user){
+        if(!order.getUser().getId().equals(user.getId())){
+            throw new CustomException(ExceptionCode.FORBIDDEN);
+        }
+    }
 
 
 
