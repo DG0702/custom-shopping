@@ -28,4 +28,8 @@ public class OrderItem {
 
     private Integer price;
     private Integer quantity;
+
+    public void setOrder(Order order){
+        this.order = order;
+    }
 }
