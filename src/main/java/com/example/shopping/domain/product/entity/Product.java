@@ -51,7 +51,7 @@ public class Product extends TimeStamped {
     }
 
     public void updateStock(Integer stock) {
-        if((stock != null) && (stock != 0)) {
+        if((stock != null) && (stock >= 0)) {
             this.stock = stock;
         }
     }

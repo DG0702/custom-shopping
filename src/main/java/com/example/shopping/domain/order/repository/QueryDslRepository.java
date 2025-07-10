@@ -1,6 +1,8 @@
 package com.example.shopping.domain.order.repository;
 
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.exception.CustomException;
+import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -35,6 +37,10 @@ public class QueryDslRepository {
 
         // null 체크
         long totalCount = total != null ? total : 0L;
+
+        if(totalCount == 0L) {
+            throw new CustomException(ExceptionCode.STOCK_NOT_FOUND);
+        }
 
         // 2. 데이터 조회
         List<OrderResponseDto> purchaseList = queryFactory.select(Projections.constructor(
