@@ -19,6 +19,7 @@ public enum ExceptionCode {
     EMAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "이메일을 찾을 수 없습니다."),
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니에 등록된 상품을 찾을 수 없습니다."),
     STOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 재고가 0개입니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
 
     // 409 CONFLICT
     ALREADY_EXISTS_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
