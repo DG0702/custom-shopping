@@ -89,13 +89,13 @@ public class OrderService {
 
         for(CartCreateRequestDto itemDto : dto.getItems()){
             Product product = productRepository.findById(itemDto.getProductId())
-                    .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다"));
+                    .orElseThrow(() -> new CustomException(ExceptionCode.PRODUCT_NOT_FOUND));
 
             Integer price = product.getPrice();
             Integer quantity = itemDto.getQuantity();
 
             if(price == null || quantity == null){
-                throw new IllegalArgumentException("가격 또는 수량이 잘못되었습니다.");
+                throw new CustomException(ExceptionCode.PRICE_OR_QUANTITY_REQUIRED);
             }
 
             totalPrice += (product.getPrice() * itemDto.getQuantity());
@@ -112,7 +112,7 @@ public class OrderService {
         // 주문 항목 저장
         for(CartCreateRequestDto itemDto : dto.getItems()){
             Product product  = productRepository.findById(itemDto.getProductId()).
-                    orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
+                    orElseThrow(() -> new CustomException(ExceptionCode.PRODUCT_NOT_FOUND));
 
             OrderItem orderItem = OrderMapper.orderItem(order, product, itemDto);
 
@@ -125,7 +125,7 @@ public class OrderService {
     private void decreaseQuantity(OrderRequestDto dto){
         for(CartCreateRequestDto itemDto : dto.getItems()){
             Product product  = productRepository.findById(itemDto.getProductId()).
-                    orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
+                    orElseThrow(() -> new CustomException(ExceptionCode.PRODUCT_NOT_FOUND));
 
             Integer stock = product.getStock();
             Integer quantity = itemDto.getQuantity();
