@@ -1,8 +1,8 @@
 package com.example.shopping.domain.order.controller;
 
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.dto.ResponseDto;
-import com.example.shopping.domain.order.common.ListResponse;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.service.OrderService;
@@ -40,16 +40,16 @@ public class OrderController {
 
     // 주문 목록 조회
     @GetMapping
-    public ResponseEntity<ResponseDto<ListResponse<OrderResponseDto>>> getOrders(
+    public ResponseEntity<ResponseDto<PageResponseDto<OrderResponseDto>>> getOrders(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "5") @Min(5) int size,
             @AuthenticationPrincipal AuthUser user
     ){
         Pageable pageable = PageRequest.of(page,size, Sort.by("create_at").descending());
 
-        ListResponse<OrderResponseDto> orders = orderService.getOrders(pageable, user);
+        PageResponseDto<OrderResponseDto> orders = orderService.getOrders(pageable, user);
 
-        ResponseDto<ListResponse<OrderResponseDto>> success = new ResponseDto<>("주문 목록을 조회 하였습니다.", orders);
+        ResponseDto<PageResponseDto<OrderResponseDto>> success = new ResponseDto<>("주문 목록을 조회 하였습니다.", orders);
 
         return ResponseEntity.status(HttpStatus.OK).body(success);
     }

@@ -3,9 +3,9 @@ package com.example.shopping.domain.order.service;
 
 import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
-import com.example.shopping.domain.order.common.ListResponse;
 import com.example.shopping.domain.order.common.OrderMapper;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
@@ -15,7 +15,6 @@ import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
-import com.example.shopping.domain.user.repository.UserRepository;
 import com.example.shopping.domain.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -62,14 +61,12 @@ public class OrderService {
 
     // 회원 구매한 상품 목록 조회
     @Transactional
-    public ListResponse<OrderResponseDto> getOrders(Pageable pageable, AuthUser user){
+    public PageResponseDto<OrderResponseDto> getOrders(Pageable pageable, AuthUser user){
 
         // 구매 상풍 목록
         Page<OrderResponseDto> purchaseList = orderRepository.getOrders(user, pageable);
 
-        return ListResponse.<OrderResponseDto>builder()
-                .items(purchaseList.getContent())
-                .build();
+        return new PageResponseDto<>(purchaseList);
     }
 
 
