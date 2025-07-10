@@ -90,8 +90,7 @@ public class JwtFilter extends OncePerRequestFilter {
             jwtLogAndSend(request, "Unsupported JWT token" , "지원되지 않는 JWT 토큰입니다.", e);
         }
         catch (Exception e) {
-            log.error("Internal server error", e);
-            throw new InsufficientAuthenticationException("Exception e");
+            jwtLogAndSend(request, "Internal Server error", "Exception e", e);
         }
     }
 

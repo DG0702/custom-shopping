@@ -24,9 +24,10 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
         ExceptionCode status = ExceptionCode.FORBIDDEN;
 
-        String customMessage = request.getAttribute("exceptionMessage").toString();
-
-        String message = customMessage == null ? status.getMessage() : customMessage;
+        String message = status.getMessage();
+        if(request.getAttribute("exceptionMessage") != null){
+            message = request.getAttribute("exceptionMessage").toString();
+        }
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(message, status);
         String responseBody = objectMapper.writeValueAsString(errorResponseDto);

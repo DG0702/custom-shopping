@@ -44,5 +44,4 @@ public class SecurityConfig {
         return httpSecurity.build();
 
     }
-
 }

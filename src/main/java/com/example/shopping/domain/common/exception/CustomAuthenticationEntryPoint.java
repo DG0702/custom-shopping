@@ -24,9 +24,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         ExceptionCode status = ExceptionCode.UNAUTHORIZED_REQUEST;
 
-        String customMessage = request.getAttribute("exceptionMessage").toString();
-
-        String message = customMessage == null ? status.getMessage() : customMessage;
+        String message = status.getMessage();
+        if(request.getAttribute("exceptionMessage") != null){
+            message = request.getAttribute("exceptionMessage").toString();
+        }
 
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(message, status);
         String responseBody = objectMapper.writeValueAsString(errorResponseDto);
