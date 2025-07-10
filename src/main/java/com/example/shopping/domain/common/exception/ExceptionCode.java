@@ -12,9 +12,11 @@ public enum ExceptionCode {
     WRONG_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다"),
 
     // 403 FORBIDDEN
+    FORBIDDEN(HttpStatus.FORBIDDEN, "해당 작업에 대한 권한이 없습니다."),
 
     // 404 NOT_FOUND
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다"),
+    CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니에 등록된 상품을 찾을 수 없습니다."),
 
     // 409 CONFLICT
     ALREADY_EXISTS_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
