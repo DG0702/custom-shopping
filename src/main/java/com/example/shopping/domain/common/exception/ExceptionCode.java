@@ -11,9 +11,11 @@ public enum ExceptionCode {
     PRICE_OR_QUANTITY_REQUIRED(HttpStatus.BAD_REQUEST, "가격과 수량은 필수값입니다."),
 
     // 401 UNAUTHORIZED
+    UNAUTHORIZED_REQUEST(HttpStatus.UNAUTHORIZED, "Spring Security 인증 통과 오류"),
     WRONG_PASSWORD(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다"),
 
     // 403 FORBIDDEN
+    FORBIDDEN_REQUEST(HttpStatus.FORBIDDEN, "Spring Security 인과 통과 요류"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "해당 작업에 대한 권한이 없습니다."),
 
     // 404 NOT_FOUND
