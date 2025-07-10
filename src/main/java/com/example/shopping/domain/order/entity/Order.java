@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Getter
@@ -26,8 +28,25 @@ public class Order extends TimeStamped {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // @Builder가 필드의 초기화를 무시하여 무시하도록 하기 위해 설정
+    @Builder.Default
+    @OneToMany (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
     private Integer totalPrice;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    // Order 저장 시 OrderItem 저장하기 위한 메서드
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+
+    public void updateOrderStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+
 }
