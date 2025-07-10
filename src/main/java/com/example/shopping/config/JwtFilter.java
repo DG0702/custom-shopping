@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.shopping.domain.user.enums.UserRole;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +36,7 @@ public class JwtFilter extends OncePerRequestFilter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String url = httpRequest.getRequestURI();
+        request.setAttribute("URI", url);
 
         if (url.startsWith("/auth/register") || url.startsWith("/auth/login") || url.startsWith("/auth/refresh")) {
             chain.doFilter(request, response);
@@ -44,8 +47,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (bearerJwt == null) {
             // 토큰이 없는 경우 400을 반환합니다.
-            httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "JWT 토큰이 필요합니다.");
-            return;
+            request.setAttribute("exceptionMessage", "JWT 토큰이 필요합니다.");
+            throw new InsufficientAuthenticationException("JWT 토큰이 필요합니다.");
         }
 
         String jwt = jwtUtil.substringToken(bearerJwt);
@@ -53,15 +56,16 @@ public class JwtFilter extends OncePerRequestFilter {
         //로그아웃 후 블랙리스트에 등록된 토큰인지 검사
         String blackListToken = "blacklist : " + jwt;
         if(redisTemplate.hasKey(blackListToken)){
-            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃한 유저입니다.");
+            request.setAttribute("exceptionMessage", "로그아웃한 유저입니다.");
+            throw new InsufficientAuthenticationException("로그아웃한 유저입니다.");
         }
 
         try {
             // JWT 유효성 검사와 claims 추출
             Claims claims = jwtUtil.extractClaims(jwt);
             if (claims == null) {
-                httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 JWT 토큰입니다.");
-                return;
+                request.setAttribute("exceptionMessage", "잘못된 JWT 토큰입니다.");
+                throw new BadCredentialsException("잘못된 JWT 토큰입니다.");
             }
 
             Long userId = Long.parseLong(claims.getSubject());
@@ -75,19 +79,25 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             chain.doFilter(request, response);
-        } catch (SecurityException | MalformedJwtException e) {
-            log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
-            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않는 JWT 서명입니다.");
-        } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token, 만료된 JWT token 입니다.", e);
-            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "만료된 JWT 토큰입니다.");
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.", e);
-            httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "지원되지 않는 JWT 토큰입니다.");
-        } catch (Exception e) {
+        }
+        catch (SecurityException | MalformedJwtException e) {
+            logAndSend(request, "Invalid JWT token", "유효하지 않는 JWT 서명입니다.", e);
+        }
+        catch (ExpiredJwtException e) {
+            logAndSend(request, "Expired JWT token", "만료된 JWT 토큰입니다.", e);
+        }
+        catch (UnsupportedJwtException e) {
+            logAndSend(request, "Unsupported JWT token" , "지원되지 않는 JWT 토큰입니다.", e);
+        }
+        catch (Exception e) {
             log.error("Internal server error", e);
-            httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            throw new InsufficientAuthenticationException("Exception e");
         }
     }
 
+    private void logAndSend(HttpServletRequest request, String logMessage, String message, Exception e){
+        log.error("{} : {}", logMessage, e.getMessage());
+        request.setAttribute("exceptionMessage", message);
+        throw new BadCredentialsException(message);
+    }
 }

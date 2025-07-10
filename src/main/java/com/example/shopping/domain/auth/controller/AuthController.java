@@ -11,6 +11,7 @@ import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.dto.ResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +30,8 @@ public class AuthController {
 
         SignupResponseDto responseData = authService.signup(request);
         ResponseDto<SignupResponseDto> response = new ResponseDto<>("회원가입이 완료되었습니다", responseData);
-        URI uri = URI.create("/users/" + responseData.getId());
 
-        return ResponseEntity.created(uri).body(response);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/withdraw")
