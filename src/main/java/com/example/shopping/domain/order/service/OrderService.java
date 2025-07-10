@@ -16,6 +16,7 @@ import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.repository.UserRepository;
+import com.example.shopping.domain.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,12 +32,11 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final UserQueryService userQueryService;
 
     @Transactional
     public OrderResponseDto saveOrder(AuthUser user , OrderRequestDto dto){
-        User payer = userRepository.findById(user.getId())
-                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+        User payer = userQueryService.findByIdOrElseThrow(user.getId());
 
         // 주문한 상품 총 가격
         Integer totalPrice = calculateTotalPrice(dto);
@@ -61,6 +61,7 @@ public class OrderService {
 
 
     // 회원 구매한 상품 목록 조회
+    @Transactional
     public ListResponse<OrderResponseDto> getOrders(Pageable pageable, AuthUser user){
 
         // 구매 상풍 목록
@@ -122,6 +123,10 @@ public class OrderService {
 
             Integer stock = product.getStock();
             Integer quantity = itemDto.getQuantity();
+
+            if(stock < quantity){
+                throw new CustomException(ExceptionCode.PRODUCT_OUT_OF_STOCK);
+            }
 
             Integer stockLeft = stock - quantity;
             product.updateStock(stockLeft);

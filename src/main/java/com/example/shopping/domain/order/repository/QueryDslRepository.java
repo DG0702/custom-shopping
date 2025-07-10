@@ -24,7 +24,19 @@ public class QueryDslRepository {
     private final JPAQueryFactory queryFactory;
 
     public Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable) {
-        // 1. 데이터 조회
+        // 1. 전제 개수 조회
+        Long total = queryFactory.select(order.count())
+                .from(order)
+                .leftJoin(order.user, user)
+                .where(
+                        order.user.id.eq(authUser.getId())
+                )
+                .fetchOne();
+
+        // null 체크
+        long totalCount = total != null ? total : 0L;
+
+        // 2. 데이터 조회
         List<OrderResponseDto> purchaseList = queryFactory.select(Projections.constructor(
                         OrderResponseDto.class,
                         order.id,
@@ -40,18 +52,6 @@ public class QueryDslRepository {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
-        
-        // 2. 전제 개수 조회
-        Long total = queryFactory.select(order.count())
-                .from(order)
-                .leftJoin(order.user, user)
-                .where(
-                        order.user.id.eq(authUser.getId())
-                )
-                .fetchOne();
-
-        // null 체크
-        long totalCount = total != null ? total : 0L;
 
         // 3. PageImpl 생성 및 반환
         return new PageImpl<>(purchaseList,pageable,totalCount);
