@@ -75,6 +75,8 @@ public class OrderService {
         // 로그인한 사용자와 주문 소유자 일치 여부 확인
         validateOrderOwner(order,user);
 
+        increaseQuantity(order);
+
         order.updateOrderStatus(OrderStatus.CANCELED);
     }
 
@@ -147,6 +149,19 @@ public class OrderService {
             }
 
             Integer stockLeft = stock - quantity;
+            product.updateStock(stockLeft);
+        }
+    }
+
+    private void increaseQuantity(Order order){
+        for(OrderItem itemDto : order.getOrderItems()){
+            Product product  = productRepository.findById(itemDto.getProduct().getId()).
+                    orElseThrow(() -> new CustomException(ExceptionCode.PRODUCT_NOT_FOUND));
+
+            Integer stock = product.getStock();
+            Integer quantity = itemDto.getQuantity();
+
+            Integer stockLeft = stock + quantity;
             product.updateStock(stockLeft);
         }
     }
