@@ -22,8 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,27 +33,24 @@ public class OrderService {
 
     @Transactional
     public OrderResponseDto saveOrder(AuthUser user , OrderRequestDto dto){
-        User payer = userQueryService.findByIdOrElseThrow(user.getId());
+        User buyer  = userQueryService.findByIdOrElseThrow(user.getId());
 
         // 주문한 상품 총 가격
         Integer totalPrice = calculateTotalPrice(dto);
 
         // 상품 주문(결제) 내용
-        Order order = OrderMapper.order(payer, totalPrice);
-
-        // Order 테이블 저장
-        Order save = orderRepository.save(order);
+        Order order = OrderMapper.order(buyer, totalPrice);
 
         // 주문한 수량한 만큼 재고 제거
         decreaseQuantity(dto);
 
-        // 주문한 상품들
-        List<OrderItem> orderItems = getPurchasedItems(order,dto);
+        // 주문한 상품들 리스트에 저장
+        getPurchasedItems(order,dto);
         
-        // Order_Item 테이블 저장
-        orderRepository.saveAll(orderItems);
-
-        return OrderMapper.payment(save);
+        // Order, OrderItem 저장
+        Order saveOrder = orderRepository.save(order);
+        
+        return OrderMapper.payment(saveOrder);
     }
 
 
@@ -67,6 +62,20 @@ public class OrderService {
         Page<OrderResponseDto> purchaseList = orderRepository.getOrders(user, pageable);
 
         return new PageResponseDto<>(purchaseList);
+    }
+    
+    // 주문 취소
+    @Transactional
+    public void deleteOrder(AuthUser user, Long orderId){
+
+        Order order = orderRepository.findById(orderId);
+
+        // 구매자가 주문을 취소하는 것이 맞는지 확인
+        if(!order.getUser().getId().equals(user.getId())){
+            throw new CustomException(ExceptionCode.FORBIDDEN);
+        }
+
+        orderRepository.delete(order);
     }
 
 
@@ -97,8 +106,7 @@ public class OrderService {
      *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
      */
     // 주문한 상품들
-    private List<OrderItem> getPurchasedItems(Order order, OrderRequestDto dto){
-        List<OrderItem> orderItems = new ArrayList<>();
+    private void getPurchasedItems(Order order, OrderRequestDto dto){
 
         // 주문 항목 저장
         for(CartCreateRequestDto itemDto : dto.getItems()){
@@ -107,9 +115,9 @@ public class OrderService {
 
             OrderItem orderItem = OrderMapper.orderItem(order, product, itemDto);
 
-            orderItems.add(orderItem);
+            // orderItem 저장하기 위한 과정 
+            order.addOrderItem(orderItem);
         }
-        return orderItems;
     }
 
     // 주문한 수량한 만큼 재고 제거

@@ -54,5 +54,17 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(success);
     }
 
+    // 주문 취소
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<ResponseDto<Void>> deleteOrder(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal AuthUser user){
+        orderService.deleteOrder(user,orderId);
+
+        ResponseDto<Void> success = new ResponseDto<>("주문이 취소 되었습니다.", null);
+
+        return ResponseEntity.status(HttpStatus.OK).body(success);
+    }
+
 
 }
