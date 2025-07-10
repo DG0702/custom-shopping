@@ -1,7 +1,7 @@
 package com.example.shopping.domain.auth.controller;
 
 import com.example.shopping.config.JwtUtil;
-import com.example.shopping.domain.auth.dto.request.ChangeUserRoleRequestDto;
+import com.example.shopping.domain.user.dto.ChangeUserRoleRequestDto;
 import com.example.shopping.domain.auth.dto.request.LoginRequestDto;
 import com.example.shopping.domain.auth.dto.response.LoginResponseDto;
 import com.example.shopping.domain.auth.service.AuthService;
@@ -75,15 +75,5 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/users/{userId}")
-    public ResponseEntity<ResponseDto<LoginResponseDto>> changeUserRole(
-            @RequestHeader("Authorization") String bearerAccessToken,
-            @Valid @RequestBody ChangeUserRoleRequestDto request
-            ){
 
-        LoginResponseDto responseData = authService.changeRole(bearerAccessToken, request);
-        ResponseDto<LoginResponseDto> response = new ResponseDto<>("유저 권한 변경", responseData);
-
-        return ResponseEntity.ok(response);
-    }
 }
