@@ -15,5 +15,5 @@ public class ProductPatchRequestDto {
     @Min(value = 0, message = "가격은 0원 이상이어야 합니다.")
     private Integer price;
     @Min(value = 0, message = "재고는 0개 이상이어야 합니다.")
-    private Long stock;
+    private Integer stock;
 }

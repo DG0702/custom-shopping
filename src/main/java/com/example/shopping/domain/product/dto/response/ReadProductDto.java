@@ -12,7 +12,7 @@ public class ReadProductDto {
     private String name;
     private String description;
     private Integer price;
-    private Long stock;
+    private Integer stock;
     private Long viewCount;
 
 }

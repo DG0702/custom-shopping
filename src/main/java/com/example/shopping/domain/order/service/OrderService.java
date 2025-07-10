@@ -3,6 +3,7 @@ package com.example.shopping.domain.order.service;
 
 import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.order.common.OrderMapper;
@@ -10,14 +11,16 @@ import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
 import com.example.shopping.domain.order.entity.OrderItem;
-import com.example.shopping.domain.order.repository.OrderItemRepository;
 import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
-import com.example.shopping.domain.user.repository.UserRepository;
+import com.example.shopping.domain.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,15 +31,11 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final UserRepository userRepository;
+    private final UserQueryService userQueryService;
 
-
+    @Transactional
     public OrderResponseDto saveOrder(AuthUser user , OrderRequestDto dto){
-        Long id = user.getId();
-
-        User payer = userRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+        User payer = userQueryService.findByIdOrElseThrow(user.getId());
 
         // 주문한 상품 총 가격
         Integer totalPrice = calculateTotalPrice(dto);
@@ -47,13 +46,27 @@ public class OrderService {
         // Order 테이블 저장
         Order save = orderRepository.save(order);
 
+        // 주문한 수량한 만큼 재고 제거
+        decreaseQuantity(dto);
+
         // 주문한 상품들
         List<OrderItem> orderItems = getPurchasedItems(order,dto);
         
         // Order_Item 테이블 저장
-        orderItemRepository.saveAll(orderItems);
+        orderRepository.saveAll(orderItems);
 
         return OrderMapper.payment(save);
+    }
+
+
+    // 회원 구매한 상품 목록 조회
+    @Transactional
+    public PageResponseDto<OrderResponseDto> getOrders(Pageable pageable, AuthUser user){
+
+        // 구매 상풍 목록
+        Page<OrderResponseDto> purchaseList = orderRepository.getOrders(user, pageable);
+
+        return new PageResponseDto<>(purchaseList);
     }
 
 
@@ -97,6 +110,24 @@ public class OrderService {
             orderItems.add(orderItem);
         }
         return orderItems;
+    }
+
+    // 주문한 수량한 만큼 재고 제거
+    private void decreaseQuantity(OrderRequestDto dto){
+        for(CartCreateRequestDto itemDto : dto.getItems()){
+            Product product  = productRepository.findById(itemDto.getProductId()).
+                    orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
+
+            Integer stock = product.getStock();
+            Integer quantity = itemDto.getQuantity();
+
+            if(stock < quantity){
+                throw new CustomException(ExceptionCode.PRODUCT_OUT_OF_STOCK);
+            }
+
+            Integer stockLeft = stock - quantity;
+            product.updateStock(stockLeft);
+        }
     }
 
 
