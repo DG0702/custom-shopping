@@ -38,9 +38,10 @@ public class AuthController {
     @PostMapping("/withdraw")
     public ResponseEntity<ResponseDto<Void>> withdraw(
             @AuthenticationPrincipal AuthUser user,
+            @RequestHeader("Authorization") String bearerAcessToken,
             @Valid @RequestBody WithdrawRequestDto request) {
 
-        authService.withdraw(user, request);
+        authService.withdraw(user, bearerAcessToken, request);
         ResponseDto<Void> response = new ResponseDto<>("회원탈퇴가 완료되었습니다", null);
 
         return ResponseEntity.ok(response);

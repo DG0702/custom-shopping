@@ -18,7 +18,7 @@ public class SignupRequestDto {
     @NotBlank(message = "유저 권한은 필수입니다")
     private final String userRole;
 
-    SignupRequestDto(String email, String password, String name, String address, String userRole) {
+    public SignupRequestDto(String email, String password, String name, String address, String userRole) {
         this.email = email;
         this.password = password;
         this.name = name;

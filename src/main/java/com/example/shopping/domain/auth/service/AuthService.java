@@ -60,7 +60,8 @@ public class AuthService {
 
     // 회원탈퇴
     @Transactional
-    public void withdraw(AuthUser authUser, WithdrawRequestDto request) {
+    public void withdraw(AuthUser authUser, String bearerAccessToken, WithdrawRequestDto request) {
+        String accessToken = jwtUtil.substringToken(bearerAccessToken);
 
         User user = userRepository.findById(authUser.getId())
                 .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
@@ -68,6 +69,11 @@ public class AuthService {
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new CustomException(ExceptionCode.WRONG_PASSWORD);
         }
+
+        addToBlacklist(accessToken);
+
+        String refreshTokenKey = "refreshToken : " + user.getId();
+        redisTemplate.delete(refreshTokenKey);
 
         userRepository.delete(user);
     }
