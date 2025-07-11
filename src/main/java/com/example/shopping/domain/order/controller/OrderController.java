@@ -3,6 +3,7 @@ package com.example.shopping.domain.order.controller;
 import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.dto.ResponseDto;
+import com.example.shopping.domain.order.dto.OrderItemResponseDto;
 import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.service.OrderService;
@@ -65,6 +66,25 @@ public class OrderController {
 
         return ResponseEntity.status(HttpStatus.OK).body(success);
     }
+
+    // 주문 상품들 조회
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ResponseDto<OrderItemResponseDto>> getOrder(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal AuthUser user,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "5") @Min(5) int size
+    ){
+        Pageable pageable = PageRequest.of(page, size);
+
+        OrderItemResponseDto orderItems = orderService.getOrder(user, orderId, pageable);
+
+        ResponseDto<OrderItemResponseDto> success = new ResponseDto<>("주문 상품들을 조회 하였습니다",orderItems);
+
+        return ResponseEntity.status(HttpStatus.OK).body(success);
+    }
+
+
 
 
 }
