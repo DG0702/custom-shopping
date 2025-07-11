@@ -1,8 +1,8 @@
 package com.example.shopping.domain.product.service;
 
+import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
-import com.example.shopping.domain.product.dto.response.ProductListResponseDto;
 import com.example.shopping.domain.product.dto.response.ProductRankingDto;
 import com.example.shopping.domain.product.dto.response.ReadProductDto;
 import com.example.shopping.domain.product.entity.Product;
@@ -78,11 +78,19 @@ public class ProductService {
 
     //상품목록 페이징 해서 조회
     @Transactional(readOnly = true)
-    public ProductListResponseDto getAllProductsPaged (int page, int size) {
+    public PageResponseDto<ReadProductDto> getAllProductsPaged (int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
         Page<Product> productpage = productRepository.findAllProductPaged(pageable);
 
-        return new ProductListResponseDto(productpage);
+        Page<ReadProductDto> readProductDtoPage = productpage.map(product -> new ReadProductDto(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getViewCount()));
+
+        return new PageResponseDto<>(readProductDtoPage);
     }
 
     //상품 예외처리 분리
