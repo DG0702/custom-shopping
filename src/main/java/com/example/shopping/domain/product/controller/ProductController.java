@@ -74,4 +74,24 @@ public class ProductController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품 랭킹 입니다", productService.getProductRanking(size)));
     }
+
+    //일일상품랭킹
+    @GetMapping("/daily-ranking")
+    public ResponseEntity<ResponseDto<List<ProductRankingDto>>> getDailyProductRanking(
+            @RequestParam(defaultValue = "10") Long size) {
+        if (size <= 0) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        ResponseDto<List<ProductRankingDto>> response =
+                new ResponseDto<>("일일 상품 랭킹 입니다", productService.getRedisProductRanking(size));
+        return ResponseEntity.ok(response);
+    }
+
+    //조회수 정산
+    @PostMapping("/sync")
+    public ResponseEntity<ResponseDto<Void>> syncTest() {
+        productService.syncTest();
+        ResponseDto<Void> response = new ResponseDto<>("조회수 싱크", null);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -17,12 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final RedisProductService redisProductService;
 
     //상품Create
     @Transactional
@@ -38,6 +38,8 @@ public class ProductService {
 
         Product product = findByIdOrElseThrow(productId);
         product.increaseViewCount();
+
+        redisProductService.incrementView(productId);
 
         return new ReadProductDto(
                 product.getId(),
@@ -66,7 +68,9 @@ public class ProductService {
     //상품 랭킹 조회
     @Transactional(readOnly = true)
     public List<ProductRankingDto> getProductRanking (Long size) {
+        // Repository 에서 가져온 랭킹
         List<Product> products = productRepository.findProductRanking(size);
+
         return products.stream()
                 .map(product -> new ProductRankingDto(
                         product.getId(),
@@ -74,6 +78,12 @@ public class ProductService {
                         product.getViewCount()
                 ))
                 .toList();
+    }
+
+    //일일 상품 랭킹 조회
+    @Transactional(readOnly = true)
+    public List<ProductRankingDto> getRedisProductRanking (Long size) {
+        return redisProductService.getProductsRanking(size);
     }
 
     //상품목록 페이징 해서 조회
@@ -97,5 +107,10 @@ public class ProductService {
     public Product findByIdOrElseThrow(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("대상이 존재하지 않습니다"));
+    }
+
+    //일일 조회수 DB에 적용
+    public void syncTest() {
+        redisProductService.syncDailyViewCount();
     }
 }
