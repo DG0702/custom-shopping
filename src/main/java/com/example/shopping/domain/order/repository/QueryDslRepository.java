@@ -3,7 +3,9 @@ package com.example.shopping.domain.order.repository;
 import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
+import com.example.shopping.domain.order.dto.OrderItemListDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
+import com.example.shopping.domain.order.entity.Order;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static com.example.shopping.domain.order.entity.QOrder.order;
+import static com.example.shopping.domain.order.entity.QOrderItem.orderItem;
+import static com.example.shopping.domain.product.entity.QProduct.product;
 import static com.example.shopping.domain.user.entity.QUser.user;
 
 
@@ -25,6 +29,7 @@ public class QueryDslRepository {
 
     private final JPAQueryFactory queryFactory;
 
+    // 주문 목록 조회
     public Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable) {
         // 1. 전제 개수 조회
         Long total = queryFactory.select(order.count())
@@ -61,5 +66,45 @@ public class QueryDslRepository {
 
         // 3. PageImpl 생성 및 반환
         return new PageImpl<>(purchaseList,pageable,totalCount);
+    }
+
+    // 주문 상품들 조회
+    public Page<OrderItemListDto> getOrderItems(Order order, Pageable pageable){
+
+        // 1. 전제 개수 조회
+        Long total = queryFactory.select(orderItem.count())
+                .from(orderItem)
+                .leftJoin(orderItem.product, product)
+                .where(
+                        orderItem.order.id.eq(order.getId())
+                )
+                .fetchOne();
+
+        // null 체크
+        long totalCount = total != null ? total : 0L;
+
+        if(totalCount == 0L) {
+            throw new CustomException(ExceptionCode.STOCK_NOT_FOUND);
+        }
+
+        // 2. 데이터 조회
+        List<OrderItemListDto> orderItems = queryFactory.select(Projections.constructor(
+                        OrderItemListDto.class,
+                        orderItem.product.id,
+                        orderItem.product.name,
+                        orderItem.price,
+                        orderItem.quantity
+                ))
+                .from(orderItem)
+                .leftJoin(orderItem.product, product)
+                .where(
+                        orderItem.order.id.eq(order.getId())
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // 3. PageImpl 생성 및 반환
+        return new PageImpl<>(orderItems,pageable,totalCount);
     }
 }

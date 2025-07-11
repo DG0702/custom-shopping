@@ -38,17 +38,12 @@ public class JwtFilter extends OncePerRequestFilter {
         String url = httpRequest.getRequestURI();
         request.setAttribute("URI", url);
 
-        if (url.startsWith("/auth/register") || url.startsWith("/auth/login") || url.startsWith("/auth/refresh")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         String bearerJwt = httpRequest.getHeader("Authorization");
 
+        // 토큰이 없는경우 다음 필터로 넘깁니다
         if (bearerJwt == null) {
-            // 토큰이 없는 경우 400을 반환합니다.
-            request.setAttribute("exceptionMessage", "JWT 토큰이 필요합니다.");
-            throw new InsufficientAuthenticationException("JWT 토큰이 필요합니다.");
+            chain.doFilter(request, response);
+            return;
         }
 
         String jwt = jwtUtil.substringToken(bearerJwt);

@@ -3,6 +3,7 @@ package com.example.shopping.domain.order.repository;
 import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
+import com.example.shopping.domain.order.dto.OrderItemListDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,10 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable) {
         return queryDslRepository.getOrders(authUser, pageable);
+    }
+
+    @Override
+    public Page<OrderItemListDto> getOrderItems(Order order, Pageable pageable) {
+        return queryDslRepository.getOrderItems(order, pageable);
     }
 }
