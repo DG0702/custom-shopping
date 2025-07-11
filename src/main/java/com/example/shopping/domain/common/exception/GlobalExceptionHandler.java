@@ -1,6 +1,7 @@
 package com.example.shopping.domain.common.exception;
 
 import com.example.shopping.domain.common.dto.ErrorResponseDto;
+import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -51,6 +53,13 @@ public class GlobalExceptionHandler {
         return getErrorResponse(status, errorMessage);
     }
 
+    // Param Validation 예외처리
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodValidationException(HandlerMethodValidationException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        return getErrorResponse(status, "Parameter 값을 확인해주세요");
+    }
+
     // 예상하지 못한 모든 일반 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleException(Exception ex) {
@@ -59,7 +68,7 @@ public class GlobalExceptionHandler {
         return getErrorResponse(status, ex.getMessage());
     }
 
-    public ResponseEntity<ErrorResponseDto> getErrorResponse(HttpStatus status, String message) {
+    private ResponseEntity<ErrorResponseDto> getErrorResponse(HttpStatus status, String message) {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(
                 message,
                 status.getReasonPhrase()
