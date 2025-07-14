@@ -1,4 +1,4 @@
-package com.example.shopping.domain.auth.dto.request;
+package com.example.shopping.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
