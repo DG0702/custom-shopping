@@ -90,7 +90,7 @@ public class OrderService {
         // 로그인한 사용자와 주문 소유자 일치 여부 확인
         validateOrderOwner(order,user);
 
-        // 1차 캐시를 피하기 위해 DB에서 직접 조회
+        // 1차 캐시를 피하기 위해 DB 직접 조회
         if(orderRepository.findByOrderStatus(orderId) == OrderStatus.CANCELED){
             throw new CustomException(ExceptionCode.ALREADY_ORDER_CANCEL);
         }
@@ -238,9 +238,5 @@ public class OrderService {
             throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED);
         }
     }
-
-//    public OrderRequestDto lettuceCreateOrder(AuthUser user , OrderRequestDto dto){
-//
-//    }
 
 }
