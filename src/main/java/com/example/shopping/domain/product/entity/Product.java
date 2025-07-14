@@ -53,4 +53,17 @@ public class Product extends TimeStamped {
     public void increaseViewCount () {
         this.viewCount++;
     }
+
+    public void updateStock(Integer stock) {
+        if((stock != null) && (stock >= 0)) {
+            this.stock = stock;
+        }
+    }
+
+    public void decreaseStock(int quantity) {
+        if (this.stock < quantity) {
+            throw new IllegalArgumentException("재고 부족");
+        }
+        this.stock -= quantity;
+    }
 }

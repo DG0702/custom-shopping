@@ -44,7 +44,16 @@ public class Order extends TimeStamped {
         orderItem.setOrder(this);
     }
 
-
-
+    public static Order createOrder(User user){
+        Order order = new Order();
+        order.user = user;
+        order.status = OrderStatus.ORDERED;
+        return order;
+    }
+    public void updateTotalPrice(){
+        this.totalPrice = orderItems.stream()
+                .mapToInt(OrderItem::getPriceWithQuantity)
+                .sum();
+    }
 
 }
