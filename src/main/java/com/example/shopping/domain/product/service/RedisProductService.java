@@ -93,10 +93,10 @@ public class RedisProductService {
         //Long start = System.currentTimeMillis();
 
         // 실제로 사용할 때 자정 기준 전날
-        // String Key = "product:viewCount:" + LocalDate.now().minusDays(1);
+         String Key = "product:viewCount:" + LocalDate.now().minusDays(1);
 
         // 테스트용 금일
-        String Key = "product:viewCount:" + LocalDate.now();
+        //String Key = "product:viewCount:" + LocalDate.now();
 
         Set<ZSetOperations.TypedTuple<ProductRankingCacheDto>> data = productRankingCacheRedisTemplate
                 .opsForZSet().reverseRangeWithScores(Key, 0, -1);

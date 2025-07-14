@@ -24,7 +24,7 @@ public class JdbcProductRepositoryImpl implements JdbcProductRepository {
 
     @Override
     public void batchUpdateDailyViewCount(List<ViewCountUpdateDto> updateList) {
-        String sql = "UPDATE products SET view_count = view_count + ? WHERE id = ?";
+        String sql = "UPDATE products SET view_count = view_count + ? WHERE id = ? FOR UPDATE";
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
 
             @Override
