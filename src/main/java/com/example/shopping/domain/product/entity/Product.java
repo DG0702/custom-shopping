@@ -3,6 +3,7 @@ package com.example.shopping.domain.product.entity;
 import com.example.shopping.domain.common.entity.TimeStamped;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "products")
 public class Product extends TimeStamped {
     @Id
@@ -51,11 +53,4 @@ public class Product extends TimeStamped {
     public void increaseViewCount () {
         this.viewCount++;
     }
-
-    public void updateStock(Integer stock) {
-        if((stock != null) && (stock >= 0)) {
-            this.stock = stock;
-        }
-    }
-
 }

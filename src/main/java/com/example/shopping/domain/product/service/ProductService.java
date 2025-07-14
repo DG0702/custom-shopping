@@ -1,10 +1,13 @@
 package com.example.shopping.domain.product.service;
 
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
 import com.example.shopping.domain.common.dto.PageResponseDto;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
 import com.example.shopping.domain.product.dto.request.AddEventProductRequestDto;
+import com.example.shopping.domain.order.dto.OrderCancelDto;
+import com.example.shopping.domain.order.dto.OrderRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
 import com.example.shopping.domain.product.dto.request.ProductRequestDto;
 import com.example.shopping.domain.product.dto.response.EventProductDto;
@@ -20,7 +23,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -155,5 +161,56 @@ public class ProductService {
     // 이벤트 상품 조회
     public List<EventProductDto> getEventProducts() {
         return redisProductService.getEventProducts();
+    }
+
+
+    // 카트 안 상품
+    public Map<Long, Product> getProductMap(OrderRequestDto dto){
+        List<Long> productIds = new ArrayList<>();
+
+        // productId 값만 찾기
+        for(CartCreateRequestDto item : dto.getItems()){
+            productIds.add(item.getProductId());
+        }
+
+        // productId 값으로 product 찾기 (내부적으로 존재하는 데이터만 반환) → (없는 값에 대해 예외가 따로 발생하지 않음)
+        List<Product> products = productRepository.findAllById(productIds);
+
+        if(products.size() != productIds.size()){
+            throw new CustomException(ExceptionCode.PRODUCT_NOT_FOUND);
+        }
+
+        Map<Long, Product> productMap = new HashMap<>();
+        for(Product product : products){
+            productMap.put(product.getId(), product);
+        }
+
+        return productMap;
+    }
+
+    // 주문시 재고 차감
+    public void decreaseQuantity(OrderRequestDto dto){
+        for(CartCreateRequestDto itemDto : dto.getItems()){
+
+            Long productId = itemDto.getProductId();
+            Integer quantity = itemDto.getQuantity();
+
+            int updateRows = productRepository.decreaseStock(productId,quantity);
+
+            if(updateRows == 0){
+                throw new CustomException(ExceptionCode.PRODUCT_NOT_FOUND);
+            }
+        }
+    }
+
+    // 주문 취소 시 재고 추가
+    public void increaseQuantity(List<OrderCancelDto> items){
+        for(OrderCancelDto item : items){
+
+            Long productId = item.getProductId();
+            Integer quantity = item.getQuantity();
+
+            productRepository.increaseStock(productId,quantity);
+        }
     }
 }

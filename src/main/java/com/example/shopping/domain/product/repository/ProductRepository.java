@@ -31,4 +31,14 @@ public interface ProductRepository extends JpaRepository<Product,Long>, JdbcProd
 
     @Query("SELECT p.viewCount FROM Product p WHERE p.id = :productId")
     Integer findViewCountById(@Param("productId") Long productId);
+
+    // 재고 차감
+    @Modifying
+    @Query(value = "UPDATE products SET stock = stock - :quantity WHERE id = :productId AND stock >= :quantity", nativeQuery = true)
+    int decreaseStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    // 재고 복구
+    @Modifying
+    @Query(value = "UPDATE products SET stock = stock + :quantity WHERE id = :productId", nativeQuery = true)
+    void increaseStock (@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }

@@ -32,7 +32,7 @@ public class OrderController {
             @AuthenticationPrincipal AuthUser user
     ){
 
-        OrderResponseDto orderResponseDto = orderService.saveOrder(user, dto);
+        OrderResponseDto orderResponseDto = orderService.lockCreateOrder(user, dto);
 
         ResponseDto<OrderResponseDto> success = new ResponseDto<>("주문이 완료되었습니다.", orderResponseDto);
 
@@ -60,7 +60,7 @@ public class OrderController {
     public ResponseEntity<ResponseDto<Void>> cancelOrder(
             @PathVariable Long orderId,
             @AuthenticationPrincipal AuthUser user){
-        orderService.cancelOrder(user,orderId);
+        orderService.lockCancelOrder(user,orderId);
 
         ResponseDto<Void> success = new ResponseDto<>("주문이 취소 되었습니다.", null);
 

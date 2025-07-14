@@ -3,12 +3,16 @@ package com.example.shopping.domain.user.entity;
 import com.example.shopping.domain.common.entity.TimeStamped;
 import com.example.shopping.domain.user.enums.UserRole;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "users")
 public class User extends TimeStamped {
     @Id

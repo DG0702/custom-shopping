@@ -1,11 +1,15 @@
 package com.example.shopping.domain.order.repository;
 
 import com.example.shopping.domain.common.dto.AuthUser;
+import com.example.shopping.domain.order.dto.OrderCancelDto;
 import com.example.shopping.domain.order.dto.OrderItemListDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
+import com.example.shopping.domain.order.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 
 /**
@@ -20,4 +24,10 @@ public interface OrderRepository {
     Page<OrderResponseDto> getOrders(AuthUser authUser, Pageable pageable);
 
     Page<OrderItemListDto> getOrderItems(Order order, Pageable pageable);
+
+    List<OrderCancelDto> orderCancel(Long orderId);
+
+    OrderStatus findByOrderStatus(Long orderId);
+
+    void changeStatus(Long orderId, String status);
 }

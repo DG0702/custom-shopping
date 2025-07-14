@@ -3,6 +3,7 @@ package com.example.shopping.domain.order.repository;
 import com.example.shopping.domain.common.dto.AuthUser;
 import com.example.shopping.domain.common.exception.CustomException;
 import com.example.shopping.domain.common.exception.ExceptionCode;
+import com.example.shopping.domain.order.dto.OrderCancelDto;
 import com.example.shopping.domain.order.dto.OrderItemListDto;
 import com.example.shopping.domain.order.dto.OrderResponseDto;
 import com.example.shopping.domain.order.entity.Order;
@@ -106,5 +107,17 @@ public class QueryDslRepository {
 
         // 3. PageImpl 생성 및 반환
         return new PageImpl<>(orderItems,pageable,totalCount);
+    }
+    
+    // 주문 취소
+    public List<OrderCancelDto> orderCancel(Long orderId){
+        return queryFactory.select(Projections.constructor(
+                        OrderCancelDto.class,
+                        orderItem.product.id,
+                        orderItem.quantity
+                ))
+                .from(orderItem)
+                .where(orderItem.order.id.eq(orderId))
+                .fetch();
     }
 }
