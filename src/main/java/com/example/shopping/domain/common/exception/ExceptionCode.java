@@ -28,7 +28,12 @@ public enum ExceptionCode {
 
     // 409 CONFLICT
     ALREADY_EXISTS_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
-    PRODUCT_OUT_OF_STOCK(HttpStatus.CONFLICT, "상품 재고가 부족합니다");
+    PRODUCT_OUT_OF_STOCK(HttpStatus.CONFLICT, "상품 재고가 부족합니다"),
+    ALREADY_ORDER_CANCEL(HttpStatus.CONFLICT,"이미 취소된 주문입니다."),
+    ALREADY_ORDERING(HttpStatus.CONFLICT,"현재 다른 요청에서 해당 상품의 주문을 처리중입니다. 잠시 후 다시 시도해 주세요"),
+
+    // 500
+    REDIS_LOCK_INTERRUPTED(HttpStatus.INTERNAL_SERVER_ERROR,"락 획득 중 인터럽트가 발생하였습니다.");
 
 
     private final HttpStatus httpStatus;
