@@ -53,7 +53,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // testContainers
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.data:spring-data-jpa'
+
+    // redisson
+    implementation group: 'org.redisson', name: 'redisson-spring-boot-starter', version: '3.50.0'
 }
+
 
 tasks.named('test') {
     useJUnitPlatform()
