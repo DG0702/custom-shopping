@@ -37,6 +37,15 @@ redis:
   host: ${REDIS_HOST}
   port: ${REDIS_PORT}
 
+logging:
+  level:
+    org:
+      springframework:
+        jdbc:
+          core:
+            JdbcTemplate: DEBUG
+            StatementCreatorUtils: TRACE
+
 #management:
 #  endpoints:
 #    web:

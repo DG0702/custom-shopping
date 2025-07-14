@@ -10,9 +10,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product,Long> {
+public interface ProductRepository extends JpaRepository<Product,Long>, JdbcProductRepository{
+    Optional<Product> findById(Long productId);
 
     //상품 랭킹 조회
     @Query("SELECT p FROM Product p ORDER BY p.viewCount DESC LIMIT :size")
@@ -21,6 +23,14 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     //상품 목록 조회
     @Query("SELECT p FROM Product p ORDER BY p.id ASC")
     Page<Product> findAllProductPaged(Pageable pageable);
+
+    // 단일 쿼리로 N+1 문제 발생, JDBC 배치 업데이트로 변경
+    @Modifying
+    @Query("UPDATE Product p SET p.viewCount = p.viewCount + :viewCount WHERE p.id = :productId")
+    void updateDailyViewCount(@Param("productId")Long productId, @Param("viewCount") Long viewCount);
+
+    @Query("SELECT p.viewCount FROM Product p WHERE p.id = :productId")
+    Integer findViewCountById(@Param("productId") Long productId);
 
     // 재고 차감
     @Modifying
