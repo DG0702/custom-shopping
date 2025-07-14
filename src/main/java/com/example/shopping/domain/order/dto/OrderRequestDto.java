@@ -11,6 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class OrderRequestDto {
-    @NotEmpty
+    @NotEmpty(message = "주문 항목이 비어 있을 수 없습니다.")
     private List<CartCreateRequestDto> items;
 }
