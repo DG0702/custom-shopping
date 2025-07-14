@@ -9,6 +9,7 @@ public enum ExceptionCode {
     INVALID_USER_ROLE(HttpStatus.BAD_REQUEST, "유효하지 않은 사용자 권한입니다"),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 상품 요청입니다."),
     PRICE_OR_QUANTITY_REQUIRED(HttpStatus.BAD_REQUEST, "가격과 수량은 필수값입니다."),
+    INVALID_PRODUCT_ATTRIBUTE(HttpStatus.BAD_REQUEST, "상품 속성 설정이 잘못됐습니다"),
 
     // 401 UNAUTHORIZED
     UNAUTHORIZED_REQUEST(HttpStatus.UNAUTHORIZED, "Spring Security 인증 통과 오류"),
