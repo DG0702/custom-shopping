@@ -76,6 +76,7 @@ public class JwtFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
         }
         catch (SecurityException | MalformedJwtException e) {
+            log.error("token = {}",jwt);
             jwtLogAndSend(request, "Invalid JWT token", "유효하지 않는 JWT 서명입니다.", e);
         }
         catch (ExpiredJwtException e) {
