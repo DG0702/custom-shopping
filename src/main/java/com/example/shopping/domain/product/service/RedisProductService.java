@@ -34,9 +34,9 @@ public class RedisProductService {
     private final RedisTemplate<String, ProductRankingCacheDto> productRankingCacheRedisTemplate;
 
     // Redis 일일 조회수 증가(ZSet)
-    public void incrementView(Long userId, Long productId) {
+    public void incrementView(Long userId, Product product) {
         // 어뷰징 확인용 키
-        String checkKey = "viewd:" + productId + ":" + userId;
+        String checkKey = "viewd:" + product.getId() + ":" + userId;
 
         // 동일한 키 있으면 리턴, 없으면 확인용 키 추가하고 조회수 증가
         Boolean isNew = redisTemplate.opsForValue().setIfAbsent(checkKey, "1", Duration.ofMinutes(30));
@@ -51,10 +51,7 @@ public class RedisProductService {
         productRankingCacheRedisTemplate.opsForZSet()
                 .incrementScore(
                         key,
-                        productRepository.findById(productId).map(ProductRankingCacheDto::new)
-                                .orElseThrow(() ->
-                                        new CustomException(ExceptionCode.PRODUCT_NOT_FOUND)),
-                        1);
+                        new ProductRankingCacheDto(product), 1);
 
         productRankingCacheRedisTemplate.expire(key, Duration.ofDays(3));
     }
@@ -93,7 +90,7 @@ public class RedisProductService {
         //Long start = System.currentTimeMillis();
 
         // 실제로 사용할 때 자정 기준 전날
-         String Key = "product:viewCount:" + LocalDate.now().minusDays(1);
+        String Key = "product:viewCount:" + LocalDate.now().minusDays(1);
 
         // 테스트용 금일
         //String Key = "product:viewCount:" + LocalDate.now();

@@ -55,7 +55,7 @@ public class ProductService {
         //product.increaseViewCount();
 
         // redis 일일  조회수 증가
-        redisProductService.incrementView(user.getId(), productId);
+        redisProductService.incrementView(user.getId(), product);
 
         return new ReadProductDto(
                 product.getId(),
