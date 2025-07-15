@@ -7,11 +7,9 @@ import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
 import com.example.shopping.domain.user.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.test.util.ReflectionTestUtils;
-
 
 import java.util.List;
 
@@ -32,7 +30,7 @@ public class TestDataFactory {
      * 테스트 시작 전 상품 1개, 재고 100개 저장
      * @PostConstruct : 테스트 시작 전 초기화 (한 번만 실행)
      */
-    @PostConstruct
+    //@PostConstruct
     public void init(){
 
         User user = User.builder()

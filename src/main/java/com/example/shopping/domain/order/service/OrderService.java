@@ -13,11 +13,11 @@ import com.example.shopping.domain.order.entity.OrderItem;
 import com.example.shopping.domain.order.enums.OrderStatus;
 import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.product.entity.Product;
-
 import com.example.shopping.domain.product.service.ProductService;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
+import org.redisson.RedissonMultiLock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
@@ -27,11 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -237,6 +237,98 @@ public class OrderService {
         }catch(InterruptedException e){
             throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED);
         }
+    }
+
+    //시간 단축 로직
+    @Transactional
+    public OrderResponseDto saveOrder2(AuthUser user, OrderRequestDto dto) {
+        List<Long> productIds = dto.getItems().stream()
+                .map(CartCreateRequestDto::getProductId)
+                .sorted()
+                .distinct()
+                .toList();
+
+        List<RLock> locks = productIds.stream()
+                .map(id -> redissonClient.getLock("lock:product:" + id))
+                .toList();
+
+        RLock multiLock = new RedissonMultiLock(locks.toArray(RLock[]::new));
+
+        boolean acquired = false;
+        try {
+            acquired = multiLock.tryLock(2000, 3000, TimeUnit.MILLISECONDS);
+
+            if (!acquired) {
+                throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED, "현재 다른 사용자가 처리 중입니다. 잠시 후 다시 시도해주세요.");
+            }
+
+            User buyer = userQueryService.findByIdOrElseThrow(user.getId());
+
+            Map<Long, Integer> productMap = dto.getItems().stream()
+                    .collect(Collectors.toMap(CartCreateRequestDto::getProductId, CartCreateRequestDto::getQuantity, Integer::sum));
+
+            List<Product> products = productService.decreaseStock(productMap);
+
+            Order order = Order.createOrder(buyer);
+
+            products.forEach(product -> {
+                Integer quantity = productMap.get(product.getId());
+                OrderItem item = OrderItem.createItem(product, product.getPrice(), quantity);
+                order.addOrderItem(item);
+            });
+
+            order.updateTotalPrice();
+
+            // 주문 저장
+            Order saveOrder = orderRepository.save(order);
+
+            // 4. 응답 DTO 반환
+            return OrderResponseDto.builder()
+                    .orderId(saveOrder.getId())
+                    .status(saveOrder.getStatus())
+                    .totalPrice(saveOrder.getTotalPrice())
+                    .build();
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException("락 처리 중단됨", e);
+
+        } finally {
+            if (acquired && multiLock.isHeldByCurrentThread()) {
+                multiLock.unlock();
+            }
+        }
+    }
+
+
+    //디비 비관적락 버전
+    @Transactional
+    public OrderResponseDto saveOrder3(AuthUser user , OrderRequestDto dto){
+        User buyer  = userQueryService.findByIdOrElseThrow(user.getId());
+
+        Map<Long, Integer> productMap = dto.getItems().stream()
+                .collect(Collectors.toMap(CartCreateRequestDto::getProductId, CartCreateRequestDto::getQuantity));
+
+        List<Product> products = productService.decreaseStock(productMap);
+
+        //List<Product> products = productService.getAllProductsByIds(new ArrayList<>(productMap.keySet()));
+        Order order = Order.createOrder(buyer);
+
+        products.forEach(product -> {
+            Integer quantity = productMap.get(product.getId());
+            OrderItem item = OrderItem.createItem(product, product.getPrice(), quantity);
+            order.addOrderItem(item);
+        });
+
+        order.updateTotalPrice();
+
+        // Order, OrderItem 저장
+        Order saveOrder = orderRepository.save(order);
+
+        return OrderResponseDto.builder()
+                .orderId(saveOrder.getId())
+                .status(saveOrder.getStatus())
+                .totalPrice(saveOrder.getTotalPrice())
+                .build();
     }
 
 }

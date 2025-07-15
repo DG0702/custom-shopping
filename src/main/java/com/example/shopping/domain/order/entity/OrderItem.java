@@ -32,4 +32,16 @@ public class OrderItem {
     public void setOrder(Order order){
         this.order = order;
     }
+
+    public static OrderItem createItem(Product product, Integer price, Integer quantity){
+        OrderItem orderItem = new OrderItem();
+        orderItem.product = product;
+        orderItem.price = price;
+        orderItem.quantity = quantity;
+        return orderItem;
+    }
+
+    public int getPriceWithQuantity(){
+        return price * quantity;
+    }
 }

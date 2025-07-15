@@ -213,4 +213,23 @@ public class ProductService {
             productRepository.increaseStock(productId,quantity);
         }
     }
+    //상품 목록 가져오기
+    public List<Product> getAllProductsByIds(List<Long> productIds) {
+        return productRepository.findAllByIds(productIds);
+    }
+
+    @Transactional
+    public List<Product> decreaseStock(Map<Long, Integer> productMap) {
+        List<Product> products = getAllProductsByIds(new ArrayList<>(productMap.keySet()));
+
+        for (Product product : products) {
+            Integer quantity = productMap.get(product.getId());
+            if(product.getStock() < quantity) {
+                throw new CustomException(ExceptionCode.STOCK_NOT_FOUND);
+            }
+            product.decreaseStock(quantity);
+            productRepository.save(product);
+        }
+        return products;
+    }
 }
