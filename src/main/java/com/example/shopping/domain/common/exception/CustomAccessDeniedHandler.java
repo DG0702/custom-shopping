@@ -1,12 +1,13 @@
 package com.example.shopping.domain.common.exception;
 
-import com.example.shopping.domain.common.dto.ErrorResponseDto;
+import com.example.shopping.domain.common.dto.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -21,24 +22,22 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        ExceptionCode status = ExceptionCode.FORBIDDEN;
+    public void handle(HttpServletRequest request, HttpServletResponse response,
+        AccessDeniedException accessDeniedException) throws IOException {
 
+        log.warn("Access denied : {}", accessDeniedException.getMessage());
+
+        ErrorCode status = ErrorCode.ACCESS_DENIED;
         String message = status.getMessage();
-        if(request.getAttribute("exceptionMessage") != null){
+
+        if (request.getAttribute("exceptionMessage") != null) {
             message = request.getAttribute("exceptionMessage").toString();
         }
 
-        ErrorResponseDto errorResponseDto = new ErrorResponseDto(message, status);
-        String responseBody = objectMapper.writeValueAsString(errorResponseDto);
-
-        String uri = request.getAttribute("URI").toString();
-
-        log.error("FORBIDDEN: AccessDenied - Uri : {}", uri);
+        ApiResponse<Object> apiResponse = ApiResponse.error(message, status);
 
         response.setStatus(status.getHttpStatus().value());
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(responseBody);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }
