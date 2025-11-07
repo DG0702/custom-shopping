@@ -1,78 +1,88 @@
 package com.example.shopping.domain.common.exception;
 
-import com.example.shopping.domain.common.dto.ErrorResponseDto;
-import jakarta.validation.ConstraintViolation;
+import com.example.shopping.domain.common.dto.ApiResponse;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 커스텀 예외 처리
+    // CustomException
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponseDto> handleCustomException(CustomException ex) {
-        ExceptionCode code = ex.getExceptionCode();
-        ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getCustomMessage(), code);
-        return new ResponseEntity<>(errorResponseDto, code.getHttpStatus());
+    public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException e) {
+        return ResponseEntity.status(e.getErrorCode().getHttpStatus())
+            .body(ApiResponse.error(e.getErrorCode().getMessage()));
     }
 
-    // Validation 예외 처리
+    // RequestBody → Validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
+    public ResponseEntity<ApiResponse<Map<String, String>>> MethodArgumentNotValidException(
+        MethodArgumentNotValidException e) {
+        log.warn("Validation failed : {}", e.getMessage());
 
-        // response에 입력한 내용 순서대로 정리
-        List<String> sortlist = Arrays.stream(Objects.requireNonNull(ex.getBindingResult()
-                                .getTarget()).getClass()
-                        .getDeclaredFields())
-                .map(Field::getName)
-                .toList();
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
 
-        // 예외처리 목록 순서대로 정리
-        List<FieldError> sortErrors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .sorted(Comparator.comparingInt(e -> sortlist.indexOf(e.getField())))
-                .toList();
-
-        // 첫번째 예외처리 문구
-        String errorMessage = sortErrors.get(0).getDefaultMessage();
-        return getErrorResponse(status, errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error("RequestData Validation failed", errors));
     }
 
-    // Param Validation 예외처리
+    // Param → Validation
     @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ErrorResponseDto> handleMethodValidationException(HandlerMethodValidationException ex) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        return getErrorResponse(status, "Parameter 값을 확인해주세요");
+    public ResponseEntity<ApiResponse<Map<String, String>>> handlerMethodValidationException(
+        HandlerMethodValidationException e) {
+        log.warn("Parameter validation failed: {}", e.getMessage());
+
+        Map<String, String> errors = new HashMap<>();
+
+        for (MessageSourceResolvable error : e.getAllErrors()) {
+            String fieldName = resolveFieldName(error);
+            String message = Objects.requireNonNullElse(error.getDefaultMessage(), "잘못된 요청입니다.");
+
+            errors.merge(fieldName, message, (existing, newMsg) -> existing + ", " + newMsg);
+        }
+
+        if (errors.isEmpty()) {
+            errors.put("parameter", "파라미터 검증에 실패했습니다");
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error("요청 파라미터 검증에 실패하였습니다.", errors));
     }
 
-    // 예상하지 못한 모든 일반 예외 처리
+    // security 인과(권한)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> accessDeniedException(AccessDeniedException e) {
+        return ResponseEntity.status(ErrorCode.ACCESS_DENIED.getHttpStatus())
+            .body(ApiResponse.error(ErrorCode.ACCESS_DENIED.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto> handleException(Exception ex) {
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        log.error("Exception: ", ex); // 전체 스택 트레이스 로그 출력
-        return getErrorResponse(status, ex.getMessage());
+    public ResponseEntity<ApiResponse<String>> handleException(Exception e) {
+        log.error("Exception : {} ", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error("알 수 없는 오류 발생 message : {}", e.getMessage()));
     }
 
-    private ResponseEntity<ErrorResponseDto> getErrorResponse(HttpStatus status, String message) {
-        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
-                message,
-                status.getReasonPhrase()
-        );
-        return new ResponseEntity<>(errorResponseDto, status);
+    // 필드 이름 추출 메서드
+    private String resolveFieldName(MessageSourceResolvable error) {
+        return (error instanceof FieldError fieldError) ? fieldError.getField() : "parameter";
     }
 }
