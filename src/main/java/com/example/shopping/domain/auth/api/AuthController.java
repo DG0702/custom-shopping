@@ -6,8 +6,8 @@ import com.example.shopping.domain.auth.service.AuthService;
 import com.example.shopping.domain.auth.dto.request.SignupRequest;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequest;
 import com.example.shopping.domain.auth.dto.response.SignupResponse;
-import com.example.shopping.domain.common.dto.AuthUser;
-import com.example.shopping.domain.common.dto.ApiResponse;
+import com.example.shopping.global.common.dto.AuthUser;
+import com.example.shopping.global.common.dto.ApiResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
