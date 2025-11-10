@@ -1,12 +1,7 @@
-package com.example.shopping.config;
-
-import com.example.shopping.domain.common.dto.AuthUser;
+package com.example.shopping.global.jwt;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.shopping.domain.user.enums.UserRole;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -43,6 +37,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
         String bearerToken = request.getHeader("Authorization");
+        String requestURI = request.getRequestURI();
+
+        // 공개 API 경우 토큰 검증 생략
+        if(requestURI.startsWith("/auth/signup") ||
+            requestURI.startsWith("/auth/login") ||
+            requestURI.startsWith("/auth/refresh")){
+            chain.doFilter(request,response);
+            return;
+        }
 
         // 토큰이 없는 요청(회원가입, 로그인, OAuth) → 다음 필터로 이동
         if (bearerToken == null) {

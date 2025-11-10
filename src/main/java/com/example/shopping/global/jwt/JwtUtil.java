@@ -1,4 +1,4 @@
-package com.example.shopping.config;
+package com.example.shopping.global.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -35,7 +35,8 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String createAccessToken(Long userId, String email, UserRole userRole) {
+    // 액세스 토큰 생성
+    public String createAccessToken(Long userId, UserRole userRole) {
         Date date = new Date();
 
         return BEARER_PREFIX +
@@ -49,7 +50,8 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String createRefreshToken(Long userId, String email, UserRole userRole) {
+    // 리프레시 토큰 생성
+    public String createRefreshToken(Long userId, UserRole userRole) {
         Date date = new Date();
 
         return BEARER_PREFIX +
@@ -63,6 +65,7 @@ public class JwtUtil {
                 .compact();
     }
 
+    // 토큰 유효성 검사
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -85,6 +88,7 @@ public class JwtUtil {
         }
     }
 
+    // 토큰 Bearer 분리
     public String substringToken(String tokenValue) {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {
             return tokenValue.substring(7);
@@ -92,6 +96,7 @@ public class JwtUtil {
         throw new RuntimeException("Not found Token");
     }
 
+    // Claims 추출
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
             .setSigningKey(secretKey)
@@ -100,6 +105,7 @@ public class JwtUtil {
             .getBody();
     }
 
+    // 만료시간 조회
     public Long getExpiration(String token) {
         Date expiration = extractClaims(token).getExpiration();
         return expiration.getTime() - System.currentTimeMillis();
