@@ -1,6 +1,6 @@
 package com.example.shopping.domain.user.entity;
 
-import com.example.shopping.domain.common.entity.TimeStamped;
+import com.example.shopping.global.common.entity.BaseEntity;
 import com.example.shopping.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,15 +14,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Table(name = "users")
-public class User extends TimeStamped {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(unique = true)
     private String email;
+
     private String password;
+
     private String name;
+
     private String address;
+
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
@@ -32,5 +37,9 @@ public class User extends TimeStamped {
         this.name = name;
         this.address = address;
         this.userRole = userRole;
+    }
+
+    public void changeRole(UserRole newRole){
+        this.userRole = newRole;
     }
 }
