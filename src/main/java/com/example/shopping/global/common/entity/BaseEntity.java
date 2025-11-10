@@ -1,4 +1,4 @@
-package com.example.shopping.domain.common.entity;
+package com.example.shopping.global.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class TimeStamped {
+public abstract class BaseEntity {
     @CreatedDate
     @Column(nullable = false)
     private LocalDateTime createdAt;

@@ -1,4 +1,4 @@
-package com.example.shopping.domain.common.dto;
+package com.example.shopping.global.common.dto;
 
 import lombok.Getter;
 

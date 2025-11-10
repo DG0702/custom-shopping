@@ -1,6 +1,6 @@
-package com.example.shopping.domain.common.exception;
+package com.example.shopping.global.common.exception;
 
-import com.example.shopping.domain.common.dto.ApiResponse;
+import com.example.shopping.global.common.dto.ApiResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
