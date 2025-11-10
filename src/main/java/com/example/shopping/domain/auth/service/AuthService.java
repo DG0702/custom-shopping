@@ -6,7 +6,6 @@ import com.example.shopping.domain.auth.dto.request.SignupRequest;
 import com.example.shopping.domain.auth.dto.request.WithdrawRequest;
 import com.example.shopping.domain.auth.dto.response.LoginResponse;
 import com.example.shopping.domain.auth.dto.response.SignupResponse;
-import com.example.shopping.global.common.dto.AuthUser;
 import com.example.shopping.global.common.exception.CustomException;
 import com.example.shopping.global.common.exception.ErrorCode;
 import com.example.shopping.domain.user.entity.User;
