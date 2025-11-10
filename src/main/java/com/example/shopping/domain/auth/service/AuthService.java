@@ -57,10 +57,10 @@ public class AuthService {
 
     // 회원탈퇴
     @Transactional
-    public void withdraw(AuthUser authUser, String bearerAccessToken, WithdrawRequest request) {
+    public void withdraw(Long userId, String bearerAccessToken, WithdrawRequest request) {
         String accessToken = jwtUtil.substringToken(bearerAccessToken);
 
-        User user = userRepository.findById(authUser.getId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
