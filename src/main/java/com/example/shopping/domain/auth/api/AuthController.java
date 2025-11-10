@@ -47,9 +47,9 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
         @RequestHeader("Authorization") String bearerAccessToken,
-        @AuthenticationPrincipal AuthUser user) {
+        @AuthenticationPrincipal Long userId) {
 
-        authService.logout(bearerAccessToken, user.getId());
+        authService.logout(bearerAccessToken, userId);
 
         return ResponseEntity.status(HttpStatus.OK)
             .body(ApiResponse.success("logout", null));
@@ -60,10 +60,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> withdraw(
         @Valid @RequestBody WithdrawRequest request,
         @RequestHeader("Authorization") String bearerAccessToken,
-        @AuthenticationPrincipal AuthUser user
+        @AuthenticationPrincipal Long userId
     ) {
 
-        authService.withdraw(user, bearerAccessToken, request);
+        authService.withdraw(userId, bearerAccessToken, request);
 
         return ResponseEntity.status(HttpStatus.OK)
             .body(ApiResponse.success("withdraw", null));
