@@ -1,8 +1,10 @@
-package com.example.shopping.domain.product.repository;
+package com.example.shopping.domain.product.repository.impl;
 
 import com.example.shopping.domain.product.dto.ViewCountUpdateDto;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,14 +17,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class JdbcProductRepositoryImpl implements JdbcProductRepository {
+public class JdbcProductRepositoryImpl {
 
     private final JdbcTemplate jdbcTemplate;
 
     AtomicInteger queryCount = new AtomicInteger();
 
-
-    @Override
     public void batchUpdateDailyViewCount(List<ViewCountUpdateDto> updateList) {
         String sql = "UPDATE products SET view_count = view_count + ? WHERE id = ?";
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
@@ -41,6 +41,7 @@ public class JdbcProductRepositoryImpl implements JdbcProductRepository {
             }
         });
 
+        // 실행 횟수 확인, 초기화
         log.info("Executed {} update queries in batch", queryCount.get());
         queryCount.set(0);
     }
