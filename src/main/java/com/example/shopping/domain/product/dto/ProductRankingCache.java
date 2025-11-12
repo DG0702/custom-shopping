@@ -6,13 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProductRankingCacheDto {
+@AllArgsConstructor
+public class ProductRankingCache {
     private Long id;
     private String name;
 
-    public ProductRankingCacheDto(Product product) {
+    public ProductRankingCache(Product product) {
         this.id = product.getId();
         this.name = product.getName();
     }
