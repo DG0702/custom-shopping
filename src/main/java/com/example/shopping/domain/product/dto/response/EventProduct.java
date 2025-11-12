@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class EventProductDto {
+public class EventProduct {
+
     private Long productId;
     private String productName;
     private Integer eventPrice;
