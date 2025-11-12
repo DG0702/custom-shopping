@@ -1,6 +1,7 @@
-package com.example.shopping.domain.common.exception;
+package com.example.shopping.global.jwt;
 
-import com.example.shopping.domain.common.dto.ApiResponse;
+import com.example.shopping.global.common.dto.ApiResponse;
+import com.example.shopping.global.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
