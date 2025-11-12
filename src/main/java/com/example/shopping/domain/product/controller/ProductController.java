@@ -1,19 +1,23 @@
 package com.example.shopping.domain.product.controller;
 
-import com.example.shopping.domain.common.dto.AuthUser;
-import com.example.shopping.domain.common.dto.PageResponseDto;
-import com.example.shopping.domain.common.dto.ResponseDto;
-import com.example.shopping.domain.product.dto.request.AddEventProductRequestDto;
-import com.example.shopping.domain.product.dto.request.ProductPatchRequestDto;
-import com.example.shopping.domain.product.dto.request.ProductRequestDto;
-import com.example.shopping.domain.product.dto.response.EventProductDto;
-import com.example.shopping.domain.product.dto.response.ProductRankingDto;
-import com.example.shopping.domain.product.dto.response.ReadProductDto;
+import com.example.shopping.domain.product.dto.response.ProductResponse;
+import com.example.shopping.global.common.dto.ApiResponse;
+import com.example.shopping.domain.product.dto.request.AddEventProductRequest;
+import com.example.shopping.domain.product.dto.request.ProductPatchRequest;
+import com.example.shopping.domain.product.dto.request.ProductRequest;
+import com.example.shopping.domain.product.dto.response.EventProduct;
+import com.example.shopping.domain.product.dto.response.ProductRanking;
+import com.example.shopping.domain.product.dto.response.ProductInfoResponse;
 import com.example.shopping.domain.product.service.ProductService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,99 +30,106 @@ public class ProductController {
 
     private final ProductService productService;
 
-    //상품생성
+    //상품 생성
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ResponseDto<Void>> creatProduct(@Valid @RequestBody ProductRequestDto request) {
-        productService.createProduct(request);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품이 등록되었습니다.", null));
+    public ResponseEntity<ApiResponse<ProductResponse>> creatProduct(@Valid @RequestBody ProductRequest request) {
+
+        ProductResponse response = productService.createProduct(request);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("상품 등록", response));
     }
 
     //상품 단건 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ResponseDto<ReadProductDto>> readProduct(
-            @AuthenticationPrincipal AuthUser user,
-            @PathVariable Long productId
+    public ResponseEntity<ApiResponse<ProductInfoResponse>> getProduct(
+        @AuthenticationPrincipal Long userId,
+        @PathVariable Long productId
     ) {
-        ReadProductDto result = productService.readProductById(user, productId);
-        return ResponseEntity.status(HttpStatus.OK).body((new ResponseDto<>("조회한 상품입니다.", result)));
+        ProductInfoResponse response = productService.getProduct(userId, productId);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body((ApiResponse.success("상품 조회 ", response)));
     }
 
-    //상품목록조회
+    //상품 목록 조회
     @GetMapping()
-    public ResponseEntity<ResponseDto<PageResponseDto<ReadProductDto>>> getAllProductsPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+    public ResponseEntity<ApiResponse<Page<ProductInfoResponse>>> getAllProductsPaged(
+        Pageable pageable
     ) {
-        PageResponseDto<ReadProductDto> pagedResult = productService.getAllProductsPaged(page, size);
+        Page<ProductInfoResponse> response = productService.getAllProducts(pageable);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품목록 조회 성공",pagedResult));
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("상품 목록 조회", response));
     }
 
     //상품 수정
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{productId}")
-    public ResponseEntity<ResponseDto<Void>> patchProduct(
-            @PathVariable Long productId,
-            @Valid @RequestBody ProductPatchRequestDto request
-    ) {
-        productService.updateProduct(productId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품이 수정되었습니다", null));
+    public ResponseEntity<ApiResponse<ProductInfoResponse>> patchProduct(
+        @PathVariable Long productId,
+        @Valid @RequestBody ProductPatchRequest request) {
+        ProductInfoResponse response = productService.updateProduct(productId, request);
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("상품 수정", response));
     }
 
-    //상품삭제
+    //상품 삭제 → 이벤트 생성 필요 (상품 삭제 시 타 도메인에서 자동 삭제 되도록)
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{productId}")
-    public ResponseEntity<ResponseDto<Void>> deleteProduct(@PathVariable Long productId) {
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long productId) {
         productService.deleteProduct(productId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품이 삭제되었습니다", null));
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("상품 삭제", null));
     }
 
-    //상품랭킹
+    //상품 랭킹 TOP 10
     @GetMapping("/ranking")
-    public ResponseEntity<ResponseDto<List<ProductRankingDto>>> getProductRanking(
-            @RequestParam(defaultValue = "10") Long size) {
-        if (size <= 0) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseDto<>("상품 랭킹 입니다", productService.getProductRanking(size)));
+    public ResponseEntity<ApiResponse<List<ProductRanking>>> getProductRanking() {
+
+        List<ProductRanking> response = productService.getProductRanking();
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("상품 랭킹 TOP 10", response));
     }
 
-    // 일일상품랭킹
+    // 일일 상품 랭킹 TOP 10
     @GetMapping("/daily-ranking")
-    public ResponseEntity<ResponseDto<List<ProductRankingDto>>> getDailyProductRanking(
-            @RequestParam(defaultValue = "10") Long size) {
-        if (size <= 0) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        ResponseDto<List<ProductRankingDto>> response =
-                new ResponseDto<>("일일 상품 랭킹 입니다", productService.getRedisProductRanking(size));
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<List<ProductRanking>>> getDailyProductRanking() {
+
+        List<ProductRanking> response = productService.getRedisProductRanking();
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("일일 상품 랭킹 TOP 10", response));
     }
 
-    // 조회수 정산
+    // 일일 조회수 정산 (Redis → DB)
     @PostMapping("/sync")
-    public ResponseEntity<ResponseDto<Void>> syncTest() {
+    public ResponseEntity<ApiResponse<Void>> syncTest() {
         productService.syncTest();
-        ResponseDto<Void> response = new ResponseDto<>("조회수 싱크", null);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success(" 조회 수 정산", null));
     }
 
     // 이벤트 상품 추가
     @PostMapping("/event/{productId}")
-    public ResponseEntity<ResponseDto<Void>> addEventProduct(
-            @PathVariable Long productId,
-            @Valid @RequestBody AddEventProductRequestDto request
+    public ResponseEntity<ApiResponse<Void>> addEventProduct(
+        @PathVariable Long productId,
+        @Valid @RequestBody AddEventProductRequest request
     ) {
         productService.addEventProduct(productId, request);
-        ResponseDto<Void> response = new ResponseDto<>("이벤트 상품 생성", null);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("이벤트 상품 생성", null));
     }
 
     // 이벤트 상품 조회
     @GetMapping("/event")
-    public ResponseEntity<ResponseDto<List<EventProductDto>>> getEventProducts() {
-        List<EventProductDto> responseData = productService.getEventProducts();
-        ResponseDto<List<EventProductDto>> response =
-                new ResponseDto<>("이벤트 상품 조회", responseData);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<List<EventProduct>>> getEventProducts() {
+
+        List<EventProduct> response = productService.getEventProducts();
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("이벤트 상품 조회", response));
     }
 }
