@@ -1,6 +1,6 @@
 package com.example.shopping.domain.product.entity;
 
-import com.example.shopping.domain.common.entity.TimeStamped;
+import com.example.shopping.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Table(name = "products")
-public class Product extends TimeStamped {
+public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
