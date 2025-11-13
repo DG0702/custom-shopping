@@ -1,6 +1,6 @@
 package com.example.shopping.domain.cart.entity;
 
-import com.example.shopping.domain.common.entity.TimeStamped;
+import com.example.shopping.global.common.entity.BaseEntity;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "cart_items")
-public class CartItem extends TimeStamped {
+public class CartItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
