@@ -1,7 +1,7 @@
 package com.example.shopping.domain.cart.controller;
 
-import com.example.shopping.domain.cart.dto.CartCreateRequest;
-import com.example.shopping.domain.cart.dto.CartResponse;
+import com.example.shopping.domain.cart.dto.cartRequest.CartCreateRequest;
+import com.example.shopping.domain.cart.dto.cartResponse.CartResponse;
 import com.example.shopping.domain.cart.service.CartService;
 import com.example.shopping.global.common.dto.ApiResponse;
 

@@ -2,7 +2,7 @@ package com.example.shopping.domain.cart.repository;
 
 import java.util.Optional;
 
-import com.example.shopping.domain.cart.dto.CartResponse;
+import com.example.shopping.domain.cart.dto.cartResponse.CartResponse;
 import com.example.shopping.domain.cart.entity.CartItem;
 
 import org.springframework.data.domain.Page;

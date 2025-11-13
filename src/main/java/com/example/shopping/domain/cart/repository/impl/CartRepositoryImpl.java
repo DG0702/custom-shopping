@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.example.shopping.domain.cart.dto.CartResponse;
+import com.example.shopping.domain.cart.dto.cartResponse.CartResponse;
 import com.example.shopping.domain.cart.entity.CartItem;
 import com.example.shopping.domain.cart.repository.CartRepository;
 

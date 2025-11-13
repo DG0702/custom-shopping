@@ -1,7 +1,7 @@
 package com.example.shopping.domain.product.service;
 
 import com.example.shopping.domain.product.dto.response.ProductResponse;
-import com.example.shopping.domain.cart.dto.CartCreateRequest;
+import com.example.shopping.domain.cart.dto.cartRequest.CartCreateRequest;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.global.common.exception.CustomException;
 import com.example.shopping.global.common.exception.ErrorCode;

@@ -1,4 +1,4 @@
-package com.example.shopping.domain.cart.dto;
+package com.example.shopping.domain.cart.dto.cartRequest;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
