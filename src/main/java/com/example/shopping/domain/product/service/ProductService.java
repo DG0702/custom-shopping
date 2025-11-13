@@ -1,7 +1,7 @@
 package com.example.shopping.domain.product.service;
 
 import com.example.shopping.domain.product.dto.response.ProductResponse;
-import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
+import com.example.shopping.domain.cart.dto.CartCreateRequest;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.global.common.exception.CustomException;
 import com.example.shopping.global.common.exception.ErrorCode;
@@ -144,7 +144,7 @@ public class ProductService {
         List<Long> productIds = new ArrayList<>();
 
         // productId 값만 찾기
-        for (CartCreateRequestDto item : dto.getItems()) {
+        for (CartCreateRequest item : dto.getItems()) {
             productIds.add(item.getProductId());
         }
 
@@ -165,7 +165,7 @@ public class ProductService {
 
     // 주문시 재고 차감
     public void decreaseQuantity(OrderRequestDto dto) {
-        for (CartCreateRequestDto itemDto : dto.getItems()) {
+        for (CartCreateRequest itemDto : dto.getItems()) {
 
             Long productId = itemDto.getProductId();
             Integer quantity = itemDto.getQuantity();

@@ -1,4 +1,4 @@
-package com.example.shopping.config;
+package com.example.shopping.global.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;

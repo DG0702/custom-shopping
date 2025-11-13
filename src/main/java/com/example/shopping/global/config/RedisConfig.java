@@ -1,13 +1,11 @@
-package com.example.shopping.config;
+package com.example.shopping.global.config;
 
-import com.example.shopping.domain.product.dto.ProductRankingCacheDto;
+import com.example.shopping.domain.product.dto.ProductRankingCache;
 import com.example.shopping.domain.product.entity.Product;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,12 +81,12 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, ProductRankingCacheDto> productRankingCacheRedisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, ProductRankingCacheDto> template = new RedisTemplate<>();
+    public RedisTemplate<String, ProductRankingCache> productRankingCacheRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, ProductRankingCache> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(ProductRankingCacheDto.class));
+        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(ProductRankingCache.class));
 
         return template;
     }

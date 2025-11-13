@@ -1,4 +1,4 @@
-package com.example.shopping.config;
+package com.example.shopping.global.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
