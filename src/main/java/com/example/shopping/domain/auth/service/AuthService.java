@@ -1,5 +1,7 @@
 package com.example.shopping.domain.auth.service;
 
+import com.example.shopping.domain.user.repository.UserRepository;
+import com.example.shopping.domain.user.service.UserQueryService;
 import com.example.shopping.global.jwt.JwtUtil;
 import com.example.shopping.domain.auth.dto.request.LoginRequest;
 import com.example.shopping.domain.auth.dto.request.SignupRequest;
@@ -10,7 +12,6 @@ import com.example.shopping.global.common.exception.CustomException;
 import com.example.shopping.global.common.exception.ErrorCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.enums.UserRole;
-import com.example.shopping.domain.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import java.time.Duration;
 public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
+    private final UserQueryService userQueryService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
@@ -35,7 +37,7 @@ public class AuthService {
     @Transactional
     public SignupResponse signup(SignupRequest request) {
 
-        if(userRepository.existsByEmail(request.getEmail())){
+        if(userQueryService.existsByEmail(request.getEmail())){
             throw new CustomException(ErrorCode.ALREADY_EXISTS_EMAIL);
         }
 
@@ -57,10 +59,9 @@ public class AuthService {
     // 회원탈퇴
     @Transactional
     public void withdraw(Long userId, String bearerAccessToken, WithdrawRequest request) {
-        String accessToken = jwtUtil.substringToken(bearerAccessToken);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        String accessToken = jwtUtil.substringToken(bearerAccessToken);
+        User user = userQueryService.findById(userId);
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new CustomException(ErrorCode.WRONG_PASSWORD);
@@ -78,8 +79,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = userQueryService.findByEmail(request.getEmail());
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new CustomException(ErrorCode.WRONG_PASSWORD);
@@ -107,8 +107,7 @@ public class AuthService {
         Claims claims = jwtUtil.extractClaims(refreshToken);
 
         Long userId = Long.parseLong(claims.getSubject());
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = userQueryService.findById(userId);
         String email = user.getEmail();
         UserRole userRole = UserRole.valueOf(claims.get("userRole", String.class));
 
