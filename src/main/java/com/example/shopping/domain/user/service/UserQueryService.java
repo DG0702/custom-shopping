@@ -1,13 +1,13 @@
 package com.example.shopping.domain.user.service;
 
-import com.example.shopping.domain.common.exception.CustomException;
-import com.example.shopping.domain.common.exception.ExceptionCode;
+import com.example.shopping.global.common.exception.CustomException;
+import com.example.shopping.global.common.exception.ErrorCode;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -18,21 +18,18 @@ public class UserQueryService {
         return userRepository.existsByEmail(email);
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public User findByEmailOrElseThrow(String email) {
+    public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ExceptionCode.EMAIL_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND));
     }
 
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public User findById(Long id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     public User findByIdOrElseThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ExceptionCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }
