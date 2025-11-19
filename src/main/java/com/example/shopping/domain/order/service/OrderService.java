@@ -1,12 +1,12 @@
 package com.example.shopping.domain.order.service;
 
-
-import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
-import com.example.shopping.domain.common.dto.AuthUser;
-import com.example.shopping.domain.common.dto.PageResponseDto;
-import com.example.shopping.domain.common.exception.CustomException;
-import com.example.shopping.domain.common.exception.ExceptionCode;
-import com.example.shopping.domain.order.common.OrderMapper;
+import com.example.shopping.domain.cart.entity.CartItem;
+import com.example.shopping.domain.cart.repository.CartRepository;
+import com.example.shopping.domain.order.dto.orderResponse.OrderItemResponse;
+import com.example.shopping.domain.order.dto.orderResponse.OrderResponse;
+import com.example.shopping.domain.order.repository.OrderItemRepository;
+import com.example.shopping.global.common.exception.CustomException;
+import com.example.shopping.global.common.exception.ErrorCode;
 import com.example.shopping.domain.order.dto.*;
 import com.example.shopping.domain.order.entity.Order;
 import com.example.shopping.domain.order.entity.OrderItem;
@@ -16,8 +16,9 @@ import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.service.ProductService;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.service.UserQueryService;
+
 import lombok.RequiredArgsConstructor;
-import org.redisson.RedissonMultiLock;
+
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
@@ -31,191 +32,95 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderRepository orderRepository;
     private final ProductService productService;
     private final UserQueryService userQueryService;
     private final RedissonClient redissonClient;
-
-
-    // 주문 생성(락 없이)
-    @Transactional
-    public OrderResponseDto saveOrder(AuthUser user , OrderRequestDto dto){
-        User buyer  = userQueryService.findByIdOrElseThrow(user.getId());
-
-        // 주문한 상품
-        Map<Long, Product> productMap = productService.getProductMap(dto);
-
-        // 주문한 상품 총 가격
-        Integer totalPrice = calculateTotalPrice(dto, productMap);
-
-        // 상품 주문(결제) 내용
-        Order order = OrderMapper.order(buyer, totalPrice);
-
-        // 주문한 수량한 만큼 재고 제거
-        productService.decreaseQuantity(dto);
-
-        // 주문한 상품들 리스트에 저장
-        getPurchasedItems(order, dto, productMap);
-
-        // Order, OrderItem 저장
-        Order saveOrder = orderRepository.save(order);
-
-        return OrderMapper.payment(saveOrder);
-    }
-
-
-
-    // 회원 구매한 상품 목록 조회
-    @Transactional
-    public PageResponseDto<OrderResponseDto> getOrders(Pageable pageable, AuthUser user){
-
-        // 구매 상풍 목록
-        Page<OrderResponseDto> purchaseList = orderRepository.getOrders(user, pageable);
-
-        return new PageResponseDto<>(purchaseList);
-    }
-
-    // 주문 취소 (락 없이)
-    @Transactional
-    public void cancelOrder(AuthUser user, Long orderId){
-        Order order = orderRepository.findById(orderId);
-
-        // 로그인한 사용자와 주문 소유자 일치 여부 확인
-        validateOrderOwner(order,user);
-
-        // 1차 캐시를 피하기 위해 DB 직접 조회
-        if(orderRepository.findByOrderStatus(orderId) == OrderStatus.CANCELED){
-            throw new CustomException(ExceptionCode.ALREADY_ORDER_CANCEL);
-        }
-
-        // 주문 취소 상품들과 수량
-        List<OrderCancelDto> items = orderRepository.orderCancel(orderId);
-
-        // 재고 복구
-        productService.increaseQuantity(items);
-        
-        // 상태 변화
-        orderRepository.changeStatus(orderId,OrderStatus.CANCELED.name());
-    }
-
-    // 주문 상품들 조회
-    @Transactional
-    public OrderItemResponseDto getOrder(AuthUser user, Long orderId, Pageable pageable){
-        Order order = orderRepository.findById(orderId);
-
-        // 로그인한 사용자와 주문 소유자 일치 여부 확인
-        validateOrderOwner(order,user);
-
-        Page<OrderItemListDto> orderItems = orderRepository.getOrderItems(order,pageable);
-
-        return OrderMapper.orderItemResponseDto(order,orderId, orderItems);
-    }
-
-
-
-    /**
-     *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
-     */
-    // 주문 상품 총 가격
-    private Integer calculateTotalPrice(OrderRequestDto dto, Map<Long, Product> productMap){
-        int totalPrice = 0;
-
-        for(CartCreateRequestDto itemDto : dto.getItems()){
-            // 상품 확인
-            Product product = productMap.get(itemDto.getProductId());
-
-            if(product.getPrice() == null || itemDto.getQuantity() == null){
-                throw new CustomException(ExceptionCode.PRICE_OR_QUANTITY_REQUIRED);
-            }
-
-            totalPrice += (product.getPrice() * itemDto.getQuantity());
-        }
-        return  totalPrice;
-    }
-
-    /**
-     *  TODO 다수의 쿼리 발생으로 수정이 필요할것으로 예상됨
-     */
-    // 주문한 상품들
-    private void getPurchasedItems(Order order, OrderRequestDto dto, Map<Long, Product> productMap){
-
-        // 주문 항목 저장
-        for(CartCreateRequestDto itemDto : dto.getItems()){
-            Product product = productMap.get(itemDto.getProductId());
-
-            OrderItem orderItem = OrderMapper.orderItem(order, product, itemDto);
-
-            // orderItem 저장하기 위한 과정
-            order.addOrderItem(orderItem);
-        }
-    }
-
-
-    // 로그인한 사용자와 주문 소유자 일치 여부 확인
-    private void validateOrderOwner(Order order, AuthUser user){
-        if(!order.getUser().getId().equals(user.getId())){
-            throw new CustomException(ExceptionCode.FORBIDDEN);
-        }
-    }
-
+    private final CartRepository cartRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Transactional
-    // 주문 생성 (redisson 락 있음)
-    public OrderResponseDto lockCreateOrder(AuthUser user , OrderRequestDto dto){
-        List<Long> productIds = new ArrayList<>();
+    // 주문 생성 시 주문별 상품 락 생성
+    public OrderResponse lockCreateOrder(Long userId) {
 
-        for(CartCreateRequestDto itemDto : dto.getItems()){
-            productIds.add(itemDto.getProductId());
-        }
+        User user = userQueryService.findById(userId);
+        List<CartItem> cartItems = cartRepository.findByUserId(userId);
+
+        // 오름차순으로 상품 ID 추출 (데드락 방지하기 위해)
+        List<Long> productIds = cartItems.stream()
+            .map(item -> item.getProduct().getId())
+            .sorted()
+            .toList();
 
         List<RLock> locks = new ArrayList<>();
 
-        try{
-            for(Long productId : productIds){
-                RLock lock = redissonClient.getLock("lock:product:" + productId);
-                boolean acquiredLock = lock.tryLock(3,5, TimeUnit.SECONDS);
-                System.out.println(Thread.currentThread().getName() + " 락 획득: " + acquiredLock);
-                
-                // 이미 획득한 락 모두 해제(데드락 방지)
-                if(!acquiredLock){
-                    for(RLock rLock : locks){
-                        rLock.unlock();
-                    }
-                    throw new CustomException(ExceptionCode.ALREADY_ORDERING);
-                }
+        try {
+            for (Long productId : productIds) {
+                RLock lock = tryGetLockWithBackOff("lock:product:" + productId);
                 locks.add(lock);
             }
-            return saveOrder(user,dto);
 
-        } catch (InterruptedException e) {
-            throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED);
+            return saveOrder(user, cartItems);
+
         } finally {
-            for(RLock lock : locks){
+            for (RLock lock : locks) {
                 lock.unlock();
             }
         }
     }
 
+    // 주문 생성
+    public OrderResponse saveOrder(User user, List<CartItem> cartItems) {
+
+        // 주문한 상품
+        Map<Long, Product> productMap = productService.getCartItems(cartItems);
+
+        // 재고 감소
+        productService.decreaseStock(cartItems, productMap);
+
+        // 상품 주문 (상태 변경)
+        Order order = Order.createOrder(user);
+
+        Order saveOrder = orderRepository.save(order);
+
+        // 주문한 상품들 리스트에 저장
+        List<OrderItem> purchasedItems = getPurchasedItems(order, cartItems, productMap);
+
+        // 총 가격
+        order.updateTotalPrice(purchasedItems);
+
+        cartRepository.deleteByUserId(user.getId());
+
+        return new OrderResponse(saveOrder);
+    }
+
+    //  주문 목록 조회
+    @Transactional
+    public Page<OrderResponse> getOrders(Pageable pageable, Long userId) {
+
+        User user = userQueryService.findById(userId);
+
+        return orderRepository.getOrders(user, pageable);
+    }
+
     // 주문 취소 (redisson 락 있음)
     @Transactional
-    public void lockCancelOrder(AuthUser user , Long orderId){
+    public void lockCancelOrder(Long userId, Long orderId) {
 
+        User user = userQueryService.findById(userId);
         String lockKey = "lock:order:" + orderId;
         RLock lock = redissonClient.getLock(lockKey);
 
-
-        try{
-            boolean acquiredLock = lock.tryLock(3,5, TimeUnit.SECONDS);
+        try {
+            boolean acquiredLock = lock.tryLock(1, 5, TimeUnit.SECONDS);
             System.out.println(Thread.currentThread().getName() + " 락 획득: " + acquiredLock);
-            if(!acquiredLock){
-                throw new CustomException(ExceptionCode.ALREADY_ORDER_CANCEL);
+            if (!acquiredLock) {
+                throw new CustomException(ErrorCode.ALREADY_ORDER_CANCEL);
             }
 
             cancelOrder(user, orderId);
@@ -224,111 +129,201 @@ public class OrderService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
-                    if(status == TransactionSynchronization.STATUS_COMMITTED){
+                    if (status == TransactionSynchronization.STATUS_COMMITTED) {
                         lock.unlock();
                         System.out.println("트랜잭션 커밋 후 락 해제");
-                    }else{
-                        if(lock.isHeldByCurrentThread()){
+                    } else {
+                        if (lock.isHeldByCurrentThread()) {
                             lock.unlock();
                         }
                     }
                 }
             });
-        }catch(InterruptedException e){
-            throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED);
+        } catch (InterruptedException e) {
+            throw new CustomException(ErrorCode.REDIS_LOCK_INTERRUPTED);
+        }
+    }
+
+    // 주문 취소
+    public void cancelOrder(User user, Long orderId) {
+        Order order = orderRepository.findById(orderId);
+
+        // 로그인한 사용자와 주문 소유자 일치 여부 확인
+        validateOrderOwner(order, user);
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new CustomException(ErrorCode.ALREADY_ORDER_CANCEL);
+        }
+
+        // 주문 취소 상품들과 수량
+        List<OrderCancel> items = orderRepository.orderCancel(orderId);
+
+        // 재고 복구
+        productService.increaseStock(items);
+
+        // 상태 변화
+        order.updateStatus();
+    }
+
+    // 주문 상품들 조회
+    @Transactional
+    public OrderItemResponse getOrder(Long userId, Long orderId) {
+        Order order = orderRepository.findById(orderId);
+        User user = userQueryService.findById(userId);
+
+        // 로그인한 사용자와 주문 소유자 일치 여부 확인
+        validateOrderOwner(order, user);
+
+        return orderRepository.getOrderItems(orderId);
+
+        // return OrderMapper.orderItemResponseDto(order, orderId, orderItems);
+    }
+
+    // 주문 상품에 대해 락 획득 시도
+    private RLock tryGetLockWithBackOff(String lockKey) {
+        int retry = 0;
+        long wait = 50;
+
+        while (retry < 5) {
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                boolean acquired = lock.tryLock(1, 5, TimeUnit.SECONDS);
+
+                if (acquired) {
+                    System.out.println("락 획득 성공 : " + lockKey + "retry : " + retry);
+                    return lock;
+                }
+            } catch (InterruptedException e) {
+                throw new CustomException(ErrorCode.REDIS_LOCK_INTERRUPTED);
+            }
+
+            try {
+                Thread.sleep(wait);
+            } catch (InterruptedException ignored) {
+            }
+
+            wait *= 2;
+            retry++;
+        }
+
+        throw new CustomException(ErrorCode.ALREADY_ORDERING);
+    }
+
+    // 주문한 상품들
+    private List<OrderItem> getPurchasedItems(Order order,
+        List<CartItem> cartItems, Map<Long, Product> productMap) {
+
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (CartItem item : cartItems) {
+            Product product = productMap.get(item.getProduct().getId());
+            OrderItem orderItem = OrderItem.createOrderItem(
+                order, product, product.getPrice(), item.getQuantity());
+            orderItems.add(orderItem);
+        }
+        orderItemRepository.saveAll(orderItems);
+
+        return orderItems;
+    }
+
+    // 로그인한 사용자와 주문 소유자 일치 여부 확인
+    private void validateOrderOwner(Order order, User user) {
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
 
     //시간 단축 로직
-    @Transactional
-    public OrderResponseDto saveOrder2(AuthUser user, OrderRequestDto dto) {
-        List<Long> productIds = dto.getItems().stream()
-                .map(CartCreateRequestDto::getProductId)
-                .sorted()
-                .distinct()
-                .toList();
+    // @Transactional
+    // public OrderResponse saveOrder2(AuthUser user, OrderRequest dto) {
+    //     List<Long> productIds = dto.getItems().stream()
+    //         .map(CartCreateRequest::getProductId)
+    //         .sorted()
+    //         .distinct()
+    //         .toList();
+    //
+    //     List<RLock> locks = productIds.stream()
+    //         .map(id -> redissonClient.getLock("lock:product:" + id))
+    //         .toList();
+    //
+    //     RLock multiLock = new RedissonMultiLock(locks.toArray(RLock[]::new));
+    //
+    //     boolean acquired = false;
+    //     try {
+    //         acquired = multiLock.tryLock(2000, 3000, TimeUnit.MILLISECONDS);
+    //
+    //         if (!acquired) {
+    //             throw new CustomException(ErrorCode.REDIS_LOCK_INTERRUPTED, "현재 다른 사용자가 처리 중입니다. 잠시 후 다시 시도해주세요.");
+    //         }
+    //
+    //         User buyer = userQueryService.findByIdOrElseThrow(user.getId());
+    //
+    //         Map<Long, Integer> productMap = dto.getItems().stream()
+    //             .collect(
+    //                 Collectors.toMap(CartCreateRequest::getProductId, CartCreateRequest::getQuantity, Integer::sum));
+    //
+    //         List<Product> products = productService.decreaseStock1(productMap);
+    //
+    //         Order order = Order.createOrder(buyer);
+    //
+    //         products.forEach(product -> {
+    //             Integer quantity = productMap.get(product.getId());
+    //             OrderItem item = OrderItem.createOrderItem(product, product.getPrice(), quantity);
+    //             order.addOrderItem(item);
+    //         });
+    //
+    //         order.updateTotalPrice();
+    //
+    //         // 주문 저장
+    //         Order saveOrder = orderRepository.save(order);
+    //
+    //         // 4. 응답 DTO 반환
+    //         return OrderResponse.builder()
+    //             .orderId(saveOrder.getId())
+    //             .status(saveOrder.getStatus())
+    //             .totalPrice(saveOrder.getTotalPrice())
+    //             .build();
+    //
+    //     } catch (InterruptedException e) {
+    //         throw new RuntimeException("락 처리 중단됨", e);
+    //
+    //     } finally {
+    //         if (acquired && multiLock.isHeldByCurrentThread()) {
+    //             multiLock.unlock();
+    //         }
+    //     }
+    // }
 
-        List<RLock> locks = productIds.stream()
-                .map(id -> redissonClient.getLock("lock:product:" + id))
-                .toList();
-
-        RLock multiLock = new RedissonMultiLock(locks.toArray(RLock[]::new));
-
-        boolean acquired = false;
-        try {
-            acquired = multiLock.tryLock(2000, 3000, TimeUnit.MILLISECONDS);
-
-            if (!acquired) {
-                throw new CustomException(ExceptionCode.REDIS_LOCK_INTERRUPTED, "현재 다른 사용자가 처리 중입니다. 잠시 후 다시 시도해주세요.");
-            }
-
-            User buyer = userQueryService.findByIdOrElseThrow(user.getId());
-
-            Map<Long, Integer> productMap = dto.getItems().stream()
-                    .collect(Collectors.toMap(CartCreateRequestDto::getProductId, CartCreateRequestDto::getQuantity, Integer::sum));
-
-            List<Product> products = productService.decreaseStock(productMap);
-
-            Order order = Order.createOrder(buyer);
-
-            products.forEach(product -> {
-                Integer quantity = productMap.get(product.getId());
-                OrderItem item = OrderItem.createItem(product, product.getPrice(), quantity);
-                order.addOrderItem(item);
-            });
-
-            order.updateTotalPrice();
-
-            // 주문 저장
-            Order saveOrder = orderRepository.save(order);
-
-            // 4. 응답 DTO 반환
-            return OrderResponseDto.builder()
-                    .orderId(saveOrder.getId())
-                    .status(saveOrder.getStatus())
-                    .totalPrice(saveOrder.getTotalPrice())
-                    .build();
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException("락 처리 중단됨", e);
-
-        } finally {
-            if (acquired && multiLock.isHeldByCurrentThread()) {
-                multiLock.unlock();
-            }
-        }
-    }
-
-
-    //디비 비관적락 버전
-    @Transactional
-    public OrderResponseDto saveOrder3(AuthUser user , OrderRequestDto dto){
-        User buyer  = userQueryService.findByIdOrElseThrow(user.getId());
-
-        Map<Long, Integer> productMap = dto.getItems().stream()
-                .collect(Collectors.toMap(CartCreateRequestDto::getProductId, CartCreateRequestDto::getQuantity));
-
-        List<Product> products = productService.decreaseStock(productMap);
-
-        //List<Product> products = productService.getAllProductsByIds(new ArrayList<>(productMap.keySet()));
-        Order order = Order.createOrder(buyer);
-
-        products.forEach(product -> {
-            Integer quantity = productMap.get(product.getId());
-            OrderItem item = OrderItem.createItem(product, product.getPrice(), quantity);
-            order.addOrderItem(item);
-        });
-
-        order.updateTotalPrice();
-
-        // Order, OrderItem 저장
-        Order saveOrder = orderRepository.save(order);
-
-        return OrderResponseDto.builder()
-                .orderId(saveOrder.getId())
-                .status(saveOrder.getStatus())
-                .totalPrice(saveOrder.getTotalPrice())
-                .build();
-    }
+    // //디비 비관적락 버전
+    // @Transactional
+    // public OrderResponseDto saveOrder3(AuthUser user, OrderRequest dto) {
+    //     User buyer = userQueryService.findByIdOrElseThrow(user.getId());
+    //
+    //     Map<Long, Integer> productMap = dto.getItems().stream()
+    //         .collect(Collectors.toMap(CartCreateRequest::getProductId, CartCreateRequest::getQuantity));
+    //
+    //     List<Product> products = productService.decreaseStock(productMap);
+    //
+    //     //List<Product> products = productService.getAllProductsByIds(new ArrayList<>(productMap.keySet()));
+    //     Order order = Order.createOrder(buyer);
+    //
+    //     products.forEach(product -> {
+    //         Integer quantity = productMap.get(product.getId());
+    //         OrderItem item = OrderItem.createItem(product, product.getPrice(), quantity);
+    //         order.addOrderItem(item);
+    //     });
+    //
+    //     order.updateTotalPrice();
+    //
+    //     // Order, OrderItem 저장
+    //     Order saveOrder = orderRepository.save(order);
+    //
+    //     return OrderResponseDto.builder()
+    //         .orderId(saveOrder.getId())
+    //         .status(saveOrder.getStatus())
+    //         .totalPrice(saveOrder.getTotalPrice())
+    //         .build();
+    // }
 
 }
