@@ -1,15 +1,16 @@
 package com.example.shopping.domain.product.entity;
 
 import com.example.shopping.global.common.entity.BaseEntity;
+import com.example.shopping.global.common.exception.CustomException;
+import com.example.shopping.global.common.exception.ErrorCode;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,7 +36,7 @@ public class Product extends BaseEntity {
     }
 
     // product 수정
-    public void updateProduct (String name, String description, Integer price, Integer stock) {
+    public void updateProduct(String name, String description, Integer price, Integer stock) {
         if (name != null) {
             this.name = name;
         }
@@ -50,20 +51,14 @@ public class Product extends BaseEntity {
         }
     }
 
-    public void increaseViewCount () {
-        this.viewCount++;
-    }
-
-    public void updateStock(Integer stock) {
-        if((stock != null) && (stock >= 0)) {
-            this.stock = stock;
-        }
-    }
-
     public void decreaseStock(int quantity) {
         if (this.stock < quantity) {
-            throw new IllegalArgumentException("재고 부족");
+            throw new CustomException(ErrorCode.PRODUCT_OUT_OF_STOCK);
         }
         this.stock -= quantity;
+    }
+
+    public void increaseStock(int quantity) {
+        this.stock += quantity;
     }
 }
