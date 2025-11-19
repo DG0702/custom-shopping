@@ -36,7 +36,7 @@ public class CartRepositoryQueryDSL {
             return new PageImpl<>(List.of(), pageable, 0);
         }
 
-        List<CartResponse> carts = queryFactory
+        List<CartResponse> cartItems = queryFactory
             .select(
                 Projections.constructor(
                     CartResponse.class,
@@ -49,6 +49,6 @@ public class CartRepositoryQueryDSL {
             .limit(pageable.getPageSize())
             .fetch();
 
-        return new PageImpl<>(carts, pageable, safeTotal);
+        return new PageImpl<>(cartItems, pageable, safeTotal);
     }
 }

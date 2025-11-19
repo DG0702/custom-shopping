@@ -1,5 +1,6 @@
 package com.example.shopping.domain.cart.repository.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -25,6 +26,11 @@ public class CartRepositoryImpl implements CartRepository {
     }
 
     @Override
+    public List<CartItem> findByUserId(Long userId) {
+        return cartJpaRepository.findByUserId(userId);
+    }
+
+    @Override
     public CartItem save(CartItem cartItem) {
         return cartJpaRepository.save(cartItem);
     }
@@ -37,5 +43,10 @@ public class CartRepositoryImpl implements CartRepository {
     @Override
     public void delete(CartItem cartItem) {
         cartJpaRepository.delete(cartItem);
+    }
+
+    @Override
+    public void deleteByUserId(Long userId) {
+        cartJpaRepository.deleteByUserId(userId);
     }
 }
