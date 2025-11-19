@@ -1,18 +1,14 @@
 package com.example.shopping.domain.order.controller;
 
-import com.example.shopping.domain.common.dto.AuthUser;
-import com.example.shopping.domain.common.dto.PageResponseDto;
-import com.example.shopping.domain.common.dto.ResponseDto;
-import com.example.shopping.domain.order.dto.OrderItemResponseDto;
-import com.example.shopping.domain.order.dto.OrderRequestDto;
-import com.example.shopping.domain.order.dto.OrderResponseDto;
+import com.example.shopping.global.common.dto.ApiResponse;
+import com.example.shopping.domain.order.dto.orderResponse.OrderItemResponse;
+import com.example.shopping.domain.order.dto.orderResponse.OrderResponse;
 import com.example.shopping.domain.order.service.OrderService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
+
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,66 +21,50 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // 상품 주문(결졔)
-    @PostMapping("/cart")
-    public ResponseEntity<ResponseDto<OrderResponseDto>> productOrder(
-            @Valid @RequestBody OrderRequestDto dto,
-            @AuthenticationPrincipal AuthUser user
-    ){
+    // 상품 주문
+    @PostMapping()
+    public ResponseEntity<ApiResponse<OrderResponse>> productOrder(
+        @AuthenticationPrincipal Long userId) {
 
-        OrderResponseDto orderResponseDto = orderService.lockCreateOrder(user, dto);
+        OrderResponse response = orderService.lockCreateOrder(userId);
 
-        ResponseDto<OrderResponseDto> success = new ResponseDto<>("주문이 완료되었습니다.", orderResponseDto);
-
-        return ResponseEntity.status(HttpStatus.OK).body(success);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("주문 완료", response));
     }
 
     // 주문 목록 조회
     @GetMapping
-    public ResponseEntity<ResponseDto<PageResponseDto<OrderResponseDto>>> getOrders(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "5") @Min(5) int size,
-            @AuthenticationPrincipal AuthUser user
-    ){
-        Pageable pageable = PageRequest.of(page,size, Sort.by("create_at").descending());
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
+        Pageable pageable,
+        @AuthenticationPrincipal Long userId) {
 
-        PageResponseDto<OrderResponseDto> orders = orderService.getOrders(pageable, user);
+        Page<OrderResponse> response = orderService.getOrders(pageable, userId);
 
-        ResponseDto<PageResponseDto<OrderResponseDto>> success = new ResponseDto<>("주문 목록을 조회 하였습니다.", orders);
-
-        return ResponseEntity.status(HttpStatus.OK).body(success);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("주문 목록 조회", response));
     }
 
     // 주문 취소
     @PatchMapping("/{orderId}")
-    public ResponseEntity<ResponseDto<Void>> cancelOrder(
-            @PathVariable Long orderId,
-            @AuthenticationPrincipal AuthUser user){
-        orderService.lockCancelOrder(user,orderId);
+    public ResponseEntity<ApiResponse<Void>> cancelOrder(
+        @PathVariable Long orderId, @AuthenticationPrincipal Long userId) {
 
-        ResponseDto<Void> success = new ResponseDto<>("주문이 취소 되었습니다.", null);
+        orderService.lockCancelOrder(userId, orderId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(success);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("주문 취소", null));
     }
 
     // 주문 상품들 조회
     @GetMapping("/{orderId}")
-    public ResponseEntity<ResponseDto<OrderItemResponseDto>> getOrder(
-            @PathVariable Long orderId,
-            @AuthenticationPrincipal AuthUser user,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "5") @Min(5) int size
-    ){
-        Pageable pageable = PageRequest.of(page, size);
+    public ResponseEntity<ApiResponse<OrderItemResponse>> getOrder(
+        @PathVariable Long orderId,
+        @AuthenticationPrincipal Long userId) {
 
-        OrderItemResponseDto orderItems = orderService.getOrder(user, orderId, pageable);
+        OrderItemResponse response = orderService.getOrder(userId, orderId);
 
-        ResponseDto<OrderItemResponseDto> success = new ResponseDto<>("주문 상품들을 조회 하였습니다",orderItems);
-
-        return ResponseEntity.status(HttpStatus.OK).body(success);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(ApiResponse.success("주문 상품들 조회", response));
     }
-
-
-
 
 }
