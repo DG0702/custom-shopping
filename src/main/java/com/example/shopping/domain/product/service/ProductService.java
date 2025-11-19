@@ -1,13 +1,12 @@
 package com.example.shopping.domain.product.service;
 
+import com.example.shopping.domain.cart.entity.CartItem;
 import com.example.shopping.domain.product.dto.response.ProductResponse;
-import com.example.shopping.domain.cart.dto.cartRequest.CartCreateRequest;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.global.common.exception.CustomException;
 import com.example.shopping.global.common.exception.ErrorCode;
 import com.example.shopping.domain.product.dto.request.AddEventProductRequest;
-import com.example.shopping.domain.order.dto.OrderCancelDto;
-import com.example.shopping.domain.order.dto.OrderRequestDto;
+import com.example.shopping.domain.order.dto.OrderCancel;
 import com.example.shopping.domain.product.dto.request.ProductPatchRequest;
 import com.example.shopping.domain.product.dto.request.ProductRequest;
 import com.example.shopping.domain.product.dto.response.EventProduct;
@@ -139,13 +138,13 @@ public class ProductService {
         return redisProductService.getEventProducts();
     }
 
-    // 카트 안 상품
-    public Map<Long, Product> getProductMap(OrderRequestDto dto) {
+    // 장바구니 안 상품들
+    public Map<Long, Product> getCartItems(List<CartItem> items) {
         List<Long> productIds = new ArrayList<>();
 
         // productId 값만 찾기
-        for (CartCreateRequest item : dto.getItems()) {
-            productIds.add(item.getProductId());
+        for (CartItem item : items) {
+            productIds.add(item.getProduct().getId());
         }
 
         // productId 값으로 product 찾기 (내부적으로 존재하는 데이터만 반환) → (없는 값에 대해 예외가 따로 발생하지 않음)
@@ -164,44 +163,28 @@ public class ProductService {
     }
 
     // 주문시 재고 차감
-    public void decreaseQuantity(OrderRequestDto dto) {
-        for (CartCreateRequest itemDto : dto.getItems()) {
+    public void decreaseStock(List<CartItem> items, Map<Long, Product> productMap) {
+        for (CartItem item : items) {
 
-            Long productId = itemDto.getProductId();
-            Integer quantity = itemDto.getQuantity();
+            Product product = productMap.get(item.getProduct().getId());
+            Integer quantity = item.getQuantity();
 
-            int updateRows = productRepository.decreaseStock(productId, quantity);
-
-            if (updateRows == 0) {
-                throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
-            }
+            product.decreaseStock(quantity);
         }
     }
 
     // 주문 취소 시 재고 추가
-    public void increaseQuantity(List<OrderCancelDto> items) {
-        for (OrderCancelDto item : items) {
+    public void increaseStock(List<OrderCancel> items) {
+        for (OrderCancel item : items) {
 
             Long productId = item.getProductId();
             Integer quantity = item.getQuantity();
 
-            productRepository.increaseStock(productId, quantity);
-        }
-    }
+            Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-    @Transactional
-    public List<Product> decreaseStock(Map<Long, Integer> productMap) {
-        List<Product> products = getAllProductsByIds(new ArrayList<>(productMap.keySet()));
-
-        for (Product product : products) {
-            Integer quantity = productMap.get(product.getId());
-            if (product.getStock() < quantity) {
-                throw new CustomException(ErrorCode.STOCK_NOT_FOUND);
-            }
-            product.decreaseStock(quantity);
-            productRepository.save(product);
+            product.increaseStock(quantity);
         }
-        return products;
     }
 
     //상품 예외처리 분리
