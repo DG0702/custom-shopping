@@ -21,10 +21,6 @@ public interface ProductRepository {
 
     List<Product> findProductRanking();
 
-    int decreaseStock(Long productId, Integer quantity);
-
-    void increaseStock(Long productId, Integer quantity);
-
     List<Product> findAllByIds(List<Long> ids);
 
     void batchUpdateDailyViewCount(List<ViewCountUpdateDto> updateList);
