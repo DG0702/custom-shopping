@@ -29,12 +29,9 @@ public class OrderItem {
     private Integer price;
     private Integer quantity;
 
-    public void setOrder(Order order){
-        this.order = order;
-    }
-
-    public static OrderItem createItem(Product product, Integer price, Integer quantity){
+    public static OrderItem createOrderItem(Order order, Product product, Integer price, Integer quantity){
         OrderItem orderItem = new OrderItem();
+        orderItem.order = order;
         orderItem.product = product;
         orderItem.price = price;
         orderItem.quantity = quantity;
