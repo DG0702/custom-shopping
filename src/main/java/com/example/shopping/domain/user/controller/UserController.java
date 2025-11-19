@@ -1,8 +1,5 @@
 package com.example.shopping.domain.user.controller;
 
-import com.example.shopping.domain.auth.dto.response.LoginResponse;
-import com.example.shopping.domain.user.entity.User;
-import com.example.shopping.global.common.dto.AuthUser;
 import com.example.shopping.global.common.dto.ApiResponse;
 import com.example.shopping.domain.user.dto.ChangeUserRoleRequestDto;
 import com.example.shopping.domain.user.dto.ProfileResponseDto;
