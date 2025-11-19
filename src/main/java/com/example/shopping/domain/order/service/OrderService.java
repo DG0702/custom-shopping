@@ -175,8 +175,6 @@ public class OrderService {
         validateOrderOwner(order, user);
 
         return orderRepository.getOrderItems(orderId);
-
-        // return OrderMapper.orderItemResponseDto(order, orderId, orderItems);
     }
 
     // 주문 상품에 대해 락 획득 시도
