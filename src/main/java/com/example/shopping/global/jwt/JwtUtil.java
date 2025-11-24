@@ -30,7 +30,7 @@ public class JwtUtil {
     private static final long REFRESH_TOKEN_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
     private final SecretKey secretKey;
 
-    public JwtUtil(@Value("${SECRET_KEY}") String secretKey) {
+    public JwtUtil(@Value("${jwt.secret.key}") String secretKey) {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
