@@ -1,12 +1,13 @@
 package com.example.shopping.domain.cart.service;
 
-import com.example.shopping.domain.cart.dto.CartCreateRequestDto;
+import com.example.shopping.domain.cart.dto.cartRequest.CartCreateRequest;
 import com.example.shopping.domain.cart.entity.CartItem;
 import com.example.shopping.domain.cart.repository.CartRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.service.ProductService;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.user.service.UserQueryService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,17 +30,18 @@ class CartServiceTest {
 
     @Mock
     private ProductService productService;
+
     @Mock
     private UserQueryService userQueryService;
 
     @Test
-    void 장바구니_아이템_저장_성공_테스트(){
+    void 장바구니_아이템_저장_성공_테스트() {
         // given
         Long userId = 1L;
         Long productId = 10L;
         int quantity = 3;
 
-        CartCreateRequestDto requestDto = new CartCreateRequestDto();
+        CartCreateRequest requestDto = new CartCreateRequest();
         ReflectionTestUtils.setField(requestDto, "productId", productId);
         ReflectionTestUtils.setField(requestDto, "quantity", quantity);
 
@@ -61,6 +63,5 @@ class CartServiceTest {
         verify(productService).findByIdOrElseThrow(productId);
         verify(cartRepository).save(any(CartItem.class));
     }
-
 
 }
