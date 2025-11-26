@@ -2,9 +2,9 @@ package com.example.shopping.domain.user.entity;
 
 import com.example.shopping.global.common.entity.BaseEntity;
 import com.example.shopping.domain.user.enums.UserRole;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "users")
 public class User extends BaseEntity {
     @Id
@@ -31,7 +30,7 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
-    public User(String email, String password, String name, String address, UserRole userRole){
+    public User(String email, String password, String name, String address, UserRole userRole) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -39,7 +38,7 @@ public class User extends BaseEntity {
         this.userRole = userRole;
     }
 
-    public void changeRole(UserRole newRole){
+    public void changeRole(UserRole newRole) {
         this.userRole = newRole;
     }
 }
