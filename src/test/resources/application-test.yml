@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/shopping
-    username: root
-    password: 1111
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:shopping}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
@@ -29,20 +29,17 @@ logging:
       hibernate:
         SQL: DEBUG
 
-#  data:
-#    redis:
-#      host: ${REDIS_HOST}
-#      port: ${REDIS_PORT}
-
 jwt:
   secret:
-    key: WvG406dyLBEesRAwcYAKSA4PicZkO/iBAFB93NLYF4k=
+    key: ${SECRET_KEY:WvG406dyLBEesRAwcYAKSA4PicZkO/iBAFB93NLYF4k=}
 
 redis:
-  host: localhost
-  port: 6379
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
 
 redisson:
   config: |
     singleServerConfig:
-      address: "redis://127.0.0.1:6379"
+      address: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+    
+    
