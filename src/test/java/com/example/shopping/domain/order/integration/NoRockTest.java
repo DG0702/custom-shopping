@@ -10,7 +10,6 @@ import com.example.shopping.domain.order.util.TestDataFactory;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.user.entity.User;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +22,6 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -158,12 +156,12 @@ public class NoRockTest {
 
         List<Product> products = List.of(product1, product2, product3);
 
-        for(int i = 0; i < threadCount; i++){
+        for (int i = 0; i < threadCount; i++) {
             User user = testDataFactory.createUser(
-                "test1" + i +  "@example.com",
-                "pass" + i +"word",
+                "test1" + i + "@example.com",
+                "pass" + i + "word",
                 "testUser" + i,
-                "test"+ i + "Address");
+                "test" + i + "Address");
 
             users.add(user);
 
@@ -172,7 +170,6 @@ public class NoRockTest {
             Long orderId = orderService.saveOrder(user, cartItems).getOrderId();
             orderIds.add(orderId);
         }
-
 
         Product productAfterOrder = productRepository.findById(product1.getId())
             .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -183,7 +180,6 @@ public class NoRockTest {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
         CyclicBarrier barrier = new CyclicBarrier(threadCount);
-
 
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
