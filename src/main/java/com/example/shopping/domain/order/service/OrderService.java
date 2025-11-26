@@ -75,6 +75,7 @@ public class OrderService {
     }
 
     // 주문 생성
+    @Transactional
     public OrderResponse saveOrder(User user, List<CartItem> cartItems) {
 
         // 주문한 상품
@@ -145,6 +146,7 @@ public class OrderService {
     }
 
     // 주문 취소
+    @Transactional
     public void cancelOrder(User user, Long orderId) {
         Order order = orderRepository.findById(orderId);
 
