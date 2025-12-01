@@ -1,6 +1,7 @@
 package com.example.shopping.domain.order.util;
 
 import com.example.shopping.domain.cart.entity.CartItem;
+import com.example.shopping.domain.cart.repository.CartRepository;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.product.repository.ProductRepository;
 import com.example.shopping.domain.user.entity.User;
@@ -22,6 +23,9 @@ public class TestDataFactory {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CartRepository cartRepository;
+
     public User createUser(String email, String password, String name, String address) {
         return userRepository.save(new User(email, password, name, address, UserRole.USER));
     }
@@ -35,6 +39,7 @@ public class TestDataFactory {
 
         for (Product product : products) {
             CartItem cartItem = CartItem.createCartItem(user, product, quantity);
+            cartRepository.save(cartItem);
             cartItems.add(cartItem);
         }
 
