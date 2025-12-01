@@ -1,6 +1,7 @@
 package com.example.shopping.domain.order.repository.impl;
 
 import com.example.shopping.domain.order.dto.orderResponse.OrderItemResponse;
+import com.example.shopping.domain.order.entity.OrderItem;
 import com.example.shopping.domain.order.repository.OrderRepository;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.global.common.exception.CustomException;
@@ -25,6 +26,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     private final OrderJpaRepository orderjpaRepository;
     private final OrderRepositoryQueryDSL orderRepositoryQueryDSL;
+    private final OrderItemJpaRepository orderItemJpaRepository;
 
     @Override
     public Order findById(Long id) {
@@ -50,5 +52,10 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public List<OrderCancel> orderCancel(Long orderId) {
         return orderRepositoryQueryDSL.orderCancel(orderId);
+    }
+
+    @Override
+    public List<OrderItem> findByOrderId(Long orderId) {
+        return orderItemJpaRepository.findByOrderId(orderId);
     }
 }

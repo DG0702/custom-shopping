@@ -1,6 +1,7 @@
 package com.example.shopping.domain.order.repository;
 
 import com.example.shopping.domain.order.dto.orderResponse.OrderItemResponse;
+import com.example.shopping.domain.order.entity.OrderItem;
 import com.example.shopping.domain.user.entity.User;
 import com.example.shopping.domain.order.dto.OrderCancel;
 import com.example.shopping.domain.order.dto.orderResponse.OrderResponse;
@@ -25,4 +26,6 @@ public interface OrderRepository {
     OrderItemResponse getOrderItems(Long orderId);
 
     List<OrderCancel> orderCancel(Long orderId);
+
+    List<OrderItem> findByOrderId(Long orderId);
 }
