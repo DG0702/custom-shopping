@@ -18,16 +18,16 @@ spring:
         format_sql: false
         jdbc:
           batch_size: 5000
-        #        format_sql: true
+        #format_sql: true
         #order_inserts: true
         #order_updates: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: DEBUG
 
 jwt:
   secret:
