@@ -192,9 +192,4 @@ public class ProductService {
         return productRepository.findById(productId)
             .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
     }
-
-    //상품 목록 가져오기
-    private List<Product> getAllProductsByIds(List<Long> productIds) {
-        return productRepository.findAllByIds(productIds);
-    }
 }
