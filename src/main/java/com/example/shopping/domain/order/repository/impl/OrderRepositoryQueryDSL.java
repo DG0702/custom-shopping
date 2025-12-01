@@ -45,7 +45,7 @@ public class OrderRepositoryQueryDSL {
         long totalCount = total != null ? total : 0L;
 
         if (totalCount == 0L) {
-            throw new CustomException(ErrorCode.STOCK_NOT_FOUND);
+            throw new CustomException(ErrorCode.ORDER_NOT_FOUND);
         }
 
         // 2. 데이터 조회
