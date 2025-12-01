@@ -36,18 +36,8 @@ public class NoRockTest {
     @Autowired
     private ProductRepository productRepository;
 
-    // User user;
-    //
-    // Product product1;
-    // List<Product> products;
-
     @Test
     void 락이_없는_주문_생성() throws InterruptedException {
-
-        int originalStock = 100;
-        int threadCount = 10;
-        int orderQuantity = 20;
-        int maxRetry = 100;
 
         User user = testDataFactory.createUser("test1@example.com", "pass1word", "testUser1", "test1Address");
 
@@ -56,6 +46,11 @@ public class NoRockTest {
         Product product3 = testDataFactory.createProduct("상품3", "상품3 설명", 500, 50);
 
         List<Product> products = List.of(product1, product2, product3);
+
+        int originalStock = product1.getStock();
+        int threadCount = 10;
+        int orderQuantity = 20;
+        int maxRetry = 100;
 
         // 스레드 풀, 동기화 도구 , 스레드 수 = 주문자 수
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -74,7 +69,7 @@ public class NoRockTest {
             // 요청 받은 걸 병렬적(동시에)으로 실행
             executor.submit(() -> {
 
-                // 주문 요청
+                // 장바구니 목록
                 List<CartItem> cartItems = testDataFactory.cartItems(user, products, orderQuantity);
 
                 int attemptCount = 0;
