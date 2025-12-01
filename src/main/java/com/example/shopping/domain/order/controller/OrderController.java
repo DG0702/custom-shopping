@@ -1,5 +1,7 @@
 package com.example.shopping.domain.order.controller;
 
+import com.example.shopping.domain.order.facade.OrderFacade;
+import com.example.shopping.domain.order.service.LockService;
 import com.example.shopping.global.common.dto.ApiResponse;
 import com.example.shopping.domain.order.dto.orderResponse.OrderItemResponse;
 import com.example.shopping.domain.order.dto.orderResponse.OrderResponse;
@@ -20,13 +22,14 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderFacade orderFacade;
 
     // 상품 주문
     @PostMapping()
     public ResponseEntity<ApiResponse<OrderResponse>> productOrder(
         @AuthenticationPrincipal Long userId) {
 
-        OrderResponse response = orderService.lockCreateOrder(userId);
+        OrderResponse response = orderFacade.createOrder(userId);
 
         return ResponseEntity.status(HttpStatus.OK)
             .body(ApiResponse.success("주문 완료", response));
@@ -49,7 +52,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Void>> cancelOrder(
         @PathVariable Long orderId, @AuthenticationPrincipal Long userId) {
 
-        orderService.lockCancelOrder(userId, orderId);
+        orderFacade.cancelOrder(userId, orderId);
 
         return ResponseEntity.status(HttpStatus.OK)
             .body(ApiResponse.success("주문 취소", null));
@@ -57,7 +60,7 @@ public class OrderController {
 
     // 주문 상품들 조회
     @GetMapping("/{orderId}")
-    public ResponseEntity<ApiResponse<OrderItemResponse>> getOrder(
+    public ResponseEntity<ApiResponse<OrderItemResponse>> getLockService(
         @PathVariable Long orderId,
         @AuthenticationPrincipal Long userId) {
 
