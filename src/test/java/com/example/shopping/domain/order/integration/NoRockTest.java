@@ -10,6 +10,7 @@ import com.example.shopping.domain.order.util.TestDataFactory;
 import com.example.shopping.domain.product.entity.Product;
 import com.example.shopping.domain.user.entity.User;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,21 +37,38 @@ public class NoRockTest {
     @Autowired
     private ProductRepository productRepository;
 
+    private Product product1;
+    private Product product2;
+    private Product product3;
+    private List<Product> products;
+    private int originalStock;
+    private int threadCount = 10;
+    private int orderQuantity = 20;
+    private int maxRetry = 100;
+
+    @BeforeEach
+    void setup() {
+        product1 = testDataFactory.createProduct("상품1", "상품1 설명", 1000, 200);
+        product2 = testDataFactory.createProduct("상품2", "상품2 설명", 2000, 200);
+        product3 = testDataFactory.createProduct("상품3", "상품3 설명", 500, 200);
+
+        products = List.of(product1, product2, product3);
+        originalStock = product1.getStock();
+    }
+
     @Test
     void 락이_없는_주문_생성() throws InterruptedException {
 
-        User user = testDataFactory.createUser("test1@example.com", "pass1word", "testUser1", "test1Address");
-
-        Product product1 = testDataFactory.createProduct("상품1", "상품1 설명", 1000, 100);
-        Product product2 = testDataFactory.createProduct("상품2", "상품2 설명", 2000, 200);
-        Product product3 = testDataFactory.createProduct("상품3", "상품3 설명", 500, 50);
-
-        List<Product> products = List.of(product1, product2, product3);
-
-        int originalStock = product1.getStock();
-        int threadCount = 10;
-        int orderQuantity = 20;
-        int maxRetry = 100;
+        List<User> users = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            User user = testDataFactory.createUser(
+                "test" + i + "@example.com",
+                "password" + i,
+                "user" + i,
+                "address" + i
+            );
+            users.add(user);
+        }
 
         // 스레드 풀, 동기화 도구 , 스레드 수 = 주문자 수
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -66,11 +84,13 @@ public class NoRockTest {
 
         // 스레드 풀에 주문 요청 보냄 (for문을 통해 보내기만 함)
         for (int i = 0; i < threadCount; i++) {
+            final int index = i;
             // 요청 받은 걸 병렬적(동시에)으로 실행
             executor.submit(() -> {
 
                 // 장바구니 목록
-                List<CartItem> cartItems = testDataFactory.cartItems(user, products, orderQuantity);
+                List<CartItem> cartItems = testDataFactory
+                    .cartItems(users.get(index), products, orderQuantity);
 
                 int attemptCount = 0;
                 boolean success = false;
@@ -81,7 +101,7 @@ public class NoRockTest {
                         // 동시 시작
                         barrier.await();
                         // 락이 없는 주문 생성
-                        orderService.saveOrder(user, cartItems);
+                        orderService.saveOrder(users.get(index), cartItems);
                         success = true;
                         successCount.incrementAndGet();
                         totalAttemptCount.addAndGet(attemptCount);
@@ -137,19 +157,8 @@ public class NoRockTest {
     @Test
     void 락이_없는_주문_취소() throws InterruptedException {
 
-        int originalStock = 100;
-        int orderQuantity = 5;
-        int threadCount = 10;
-        int maxRetry = 100;
-
         List<User> users = new ArrayList<>();
         List<Long> orderIds = new ArrayList<>();
-
-        Product product1 = testDataFactory.createProduct("상품1", "상품1 설명", 1000, 100);
-        Product product2 = testDataFactory.createProduct("상품2", "상품2 설명", 2000, 200);
-        Product product3 = testDataFactory.createProduct("상품3", "상품3 설명", 500, 50);
-
-        List<Product> products = List.of(product1, product2, product3);
 
         for (int i = 0; i < threadCount; i++) {
             User user = testDataFactory.createUser(
